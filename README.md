@@ -6,14 +6,17 @@
 
 > Bahasa pemrograman ini masih dalam pengembangan.
 
-## Kebutuhan
+## Cara Build
 
-- MSYS2 (disarankan untuk lingkungan Windows)
+### Kebutuhan
+
+- MSYS2 (Windows)
+- Kompilator C (Clang v22, kompiler lain belom dicoba)
+- CCache
 - CMake >= 4.4
-- Kompilator C (Clang)
 - Ninja
 
-## Cara Build & Fungsi Skrip
+### Fungsi Skrip
 
 > **Catatan:** Skrip-skrip berikut digunakan hanya untuk pengujian (`testing`).
 
