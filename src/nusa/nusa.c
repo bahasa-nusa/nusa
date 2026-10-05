@@ -1,16 +1,16 @@
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
 
 #include "nusa/berkas.h"
-#include "nusa/penolek.h"
-#include "nusa/urai_arg.h"
+#include "nusa/brkt.h"
+#include "nusa/optimasi.h"
 #include "nusa/pengurai.h"
+#include "nusa/penolek.h"
 #include "nusa/pesemantik.h"
 #include "nusa/ra.h"
-#include "nusa/optimasi.h"
-#include "nusa/brkt.h"
+#include "nusa/urai_arg.h"
 
 void cetak_info() {
   printf("Penggunaan: nusa [argumen] <berkas>\n\n");
@@ -20,11 +20,13 @@ void cetak_info() {
 }
 
 static char *salin(const char *s) {
-  if (!s) return NULL;
+  if (!s)
+    return NULL;
 
   size_t p = strlen(s) + 1;
   char *r = malloc(p);
-  if (r) memcpy(r, s, p);
+  if (r)
+    memcpy(r, s, p);
 
   return r;
 }
@@ -44,12 +46,13 @@ static void kumpul_tolek(const char *isi, const char *jalur, bool titik_masuk) {
   ib->jalur = salin(jalur);
   ib->titik_masuk = titik_masuk;
   ib->lanjut = NULL;
-  
+
   const char *ptr = isi;
   Tolek tolek;
   bool di_atas = true;
   while ((ptr = penolek(ptr, &tolek)) && tolek.tipe != TIPE_TOLEK_AKHIR) {
-    if (tolek.tipe == TIPE_TOLEK_KOMENTAR) continue;
+    if (tolek.tipe == TIPE_TOLEK_KOMENTAR)
+      continue;
 
     if (tolek.tipe == TIPE_TOLEK_NILAI_UNTAIAN && di_atas) {
       int len = tolek.panjang;
@@ -87,12 +90,13 @@ static void kumpul_tolek(const char *isi, const char *jalur, bool titik_masuk) {
 
     di_atas = false;
   }
-  
+
   if (!daftar_info) {
     daftar_info = ib;
   } else {
     InfoBer *cur = daftar_info;
-    while (cur->lanjut) cur = cur->lanjut;
+    while (cur->lanjut)
+      cur = cur->lanjut;
     cur->lanjut = ib;
   }
 }
@@ -102,23 +106,28 @@ static void cetak_tolek_terkumpul(void) {
   InfoBer *cur = daftar_info;
   while (cur) {
     nomor++;
-    if (nomor > 1) printf("\n");
-    printf("Berkas %d: %s%s\n", nomor, cur->jalur, cur->titik_masuk ? " (titik masuk)" : "");
-    
+    if (nomor > 1)
+      printf("\n");
+    printf("Berkas %d: %s%s\n", nomor, cur->jalur,
+           cur->titik_masuk ? " (titik masuk)" : "");
+
     int max_len = 0;
     const char *ptr = cur->isi;
     Tolek tolek;
     while ((ptr = penolek(ptr, &tolek)) && tolek.tipe != TIPE_TOLEK_AKHIR) {
-      if (tolek.panjang > max_len) max_len = tolek.panjang;
+      if (tolek.panjang > max_len)
+        max_len = tolek.panjang;
     }
-    if (max_len < 22) max_len = 22;
+    if (max_len < 22)
+      max_len = 22;
 
     ptr = cur->isi;
     while ((ptr = penolek(ptr, &tolek)) && tolek.tipe != TIPE_TOLEK_AKHIR) {
-      printf("%*.*s | %s\n", max_len, tolek.panjang, tolek.teks, nama_tolek(tolek.tipe));
+      printf("%*.*s | %s\n", max_len, tolek.panjang, tolek.teks,
+             nama_tolek(tolek.tipe));
     }
     printf("%*s | %s\n", max_len, "", nama_tolek(TIPE_TOLEK_AKHIR));
-    
+
     InfoBer *next = cur->lanjut;
     free(cur->isi);
     free(cur->jalur);
@@ -167,7 +176,8 @@ int main(int argc, char **argv) {
       printf("\nPesemantik:\n");
 
       int galat = pesemantik(psa);
-      if(!galat) printf("Tidak ada kesalahan\n");
+      if (!galat)
+        printf("Tidak ada kesalahan\n");
 
       if (!galat) {
         printf("\nRA:\n");

@@ -10,8 +10,10 @@ static const char *register_argumen(int i) {
 static void cetak_simbol(FILE *out, const InstruksiRA *cur) {
   fprintf(out, "%s", cur->nama);
 
-  if (cur->eks) return;
-  if (cur->pub) fprintf(out, "_pub");
+  if (cur->eks)
+    return;
+  if (cur->pub)
+    fprintf(out, "_pub");
 }
 
 static int indeks_string = 0;
@@ -23,7 +25,8 @@ static void label_string(char *keluaran, size_t n, int id) {
 static void cetak_string_rodata(FILE *out, const char *nilai) {
   size_t pjg = strlen(nilai);
   const char *isi = nilai;
-  if (pjg >= 2 && isi[0] == '\'' && isi[pjg - 1] == '\'') isi += 1, pjg -= 2;
+  if (pjg >= 2 && isi[0] == '\'' && isi[pjg - 1] == '\'')
+    isi += 1, pjg -= 2;
 
   fprintf(out, "    .ascii \"");
   for (size_t k = 0; k < pjg; k++) {
@@ -43,11 +46,14 @@ static void cetak_string_rodata(FILE *out, const char *nilai) {
 
 static void cetak_rodata(FILE *out, const InstruksiRA *daftar) {
   for (const InstruksiRA *cur = daftar; cur; cur = cur->next) {
-    if (cur->badan) cetak_rodata(out, cur->badan);
-    if (cur->tipe != RA_PANGGIL) continue;
+    if (cur->badan)
+      cetak_rodata(out, cur->badan);
+    if (cur->tipe != RA_PANGGIL)
+      continue;
 
     for (int i = 0; i < cur->jumlah; i++) {
-      if (cur->tipe_nilai[i] != RA_UNTAIAN) continue;
+      if (cur->tipe_nilai[i] != RA_UNTAIAN)
+        continue;
 
       char label[128];
       label_string(label, sizeof(label), indeks_string++);
@@ -81,11 +87,14 @@ static void cetak_instruksi(FILE *out, const InstruksiRA *ins) {
       for (const InstruksiRA *b = cur->badan; b && !ada_panggil; b = b->next)
         ada_panggil = b->tipe == RA_PANGGIL;
 
-      if (ada_panggil) fprintf(out, "    subq $8, %%rsp\n");
+      if (ada_panggil)
+        fprintf(out, "    subq $8, %%rsp\n");
 
-      if (cur->badan) cetak_instruksi(out, cur->badan);
+      if (cur->badan)
+        cetak_instruksi(out, cur->badan);
 
-      if (ada_panggil) fprintf(out, "    addq $8, %%rsp\n");
+      if (ada_panggil)
+        fprintf(out, "    addq $8, %%rsp\n");
 
       fprintf(out, "    ret\n");
     } else if (cur->tipe == RA_PANGGIL) {
@@ -119,7 +128,10 @@ void bangkitkan_brkt(const InstruksiRA *daftar) {
     const char *m = cur->modul ? cur->modul : "<program>";
     bool ada = false;
     for (int i = 0; i < jumlah_modul; i++) {
-      if (strcmp(daftar_modul[i], m) == 0) { ada = true; break; }
+      if (strcmp(daftar_modul[i], m) == 0) {
+        ada = true;
+        break;
+      }
     }
     if (!ada && jumlah_modul < 256) {
       daftar_modul[jumlah_modul++] = m;
@@ -131,13 +143,16 @@ void bangkitkan_brkt(const InstruksiRA *daftar) {
     printf("\nBerkas %s:\n", m);
 
     char nama_file[256];
-    if (strcmp(m, "<program>") == 0) snprintf(nama_file, sizeof(nama_file), "titik_masuk.s");
-    else snprintf(nama_file, sizeof(nama_file), "%s.s", m);
+    if (strcmp(m, "<program>") == 0)
+      snprintf(nama_file, sizeof(nama_file), "titik_masuk.s");
+    else
+      snprintf(nama_file, sizeof(nama_file), "%s.s", m);
 
     FILE *f = fopen(nama_file, "w");
     FILE *sTu[2] = {stdout, f};
     int jumlah_sTu = f ? 2 : 1;
-    if (!f) fprintf(stderr, "BRKT: gagal membuka %s\n", nama_file);
+    if (!f)
+      fprintf(stderr, "BRKT: gagal membuka %s\n", nama_file);
 
     for (int s = 0; s < jumlah_sTu; s++) {
       FILE *out = sTu[s];
@@ -146,13 +161,17 @@ void bangkitkan_brkt(const InstruksiRA *daftar) {
       fprintf(out, ".section .rodata\n");
       for (const InstruksiRA *cur = daftar; cur; cur = cur->next) {
         const char *cm = cur->modul ? cur->modul : "<program>";
-        if (strcmp(cm, m) != 0) continue;
+        if (strcmp(cm, m) != 0)
+          continue;
 
-        if (cur->badan) cetak_rodata(out, cur->badan);
-        if (cur->tipe != RA_PANGGIL) continue;
+        if (cur->badan)
+          cetak_rodata(out, cur->badan);
+        if (cur->tipe != RA_PANGGIL)
+          continue;
 
         for (int i = 0; i < cur->jumlah; i++) {
-          if (cur->tipe_nilai[i] != RA_UNTAIAN) continue;
+          if (cur->tipe_nilai[i] != RA_UNTAIAN)
+            continue;
 
           char label[128];
           label_string(label, sizeof(label), indeks_string++);
@@ -166,14 +185,16 @@ void bangkitkan_brkt(const InstruksiRA *daftar) {
       fprintf(out, ".text\n");
       for (const InstruksiRA *cur = daftar; cur; cur = cur->next) {
         const char *cm = cur->modul ? cur->modul : "<program>";
-        if (strcmp(cm, m) != 0) continue;
+        if (strcmp(cm, m) != 0)
+          continue;
 
         InstruksiRA single = *cur;
         single.next = NULL;
         cetak_instruksi(out, &single);
       }
 
-      if (out != stdout) fclose(out);
+      if (out != stdout)
+        fclose(out);
     }
   }
 

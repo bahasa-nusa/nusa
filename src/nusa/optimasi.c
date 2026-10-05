@@ -32,27 +32,33 @@ static void kumpulkan(const InstruksiRA *daftar) {
       jumlah_tabel++;
     }
 
-    if (cur->badan) kumpulkan(cur->badan);
+    if (cur->badan)
+      kumpulkan(cur->badan);
   }
 }
 
 static int cari(const char *nama) {
   for (int i = 0; i < jumlah_tabel; i++)
-    if (strcmp(tabel[i].nama, nama) == 0) return i;
+    if (strcmp(tabel[i].nama, nama) == 0)
+      return i;
 
   return -1;
 }
 
 static void tandai(const InstruksiRA *daftar) {
   for (const InstruksiRA *cur = daftar; cur; cur = cur->next) {
-    if (cur->badan) tandai(cur->badan);
-    if (cur->tipe != RA_PANGGIL) continue;
+    if (cur->badan)
+      tandai(cur->badan);
+    if (cur->tipe != RA_PANGGIL)
+      continue;
 
     int idx = cari(cur->nama);
-    if (idx < 0 || tabel[idx].hidup) continue;
+    if (idx < 0 || tabel[idx].hidup)
+      continue;
 
     const InstruksiRA *f = tabel[idx].fungsi;
-    if (!f->eks && !f->badan) continue;
+    if (!f->eks && !f->badan)
+      continue;
 
     tabel[idx].hidup = true;
     tandai(f->badan);
@@ -69,8 +75,10 @@ static InstruksiRA *optimalkan_dengan(const InstruksiRA *daftar) {
   InstruksiRA *ekor = NULL;
 
   for (const InstruksiRA *cur = daftar; cur; cur = cur->next) {
-    if (cur->tipe == RA_FUNGSI && !cur->eks && !cur->badan) continue;
-    if (cur->tipe == RA_PANGGIL && !hidup(cur->nama)) continue;
+    if (cur->tipe == RA_FUNGSI && !cur->eks && !cur->badan)
+      continue;
+    if (cur->tipe == RA_PANGGIL && !hidup(cur->nama))
+      continue;
 
     InstruksiRA *kopi = calloc(1, sizeof(InstruksiRA));
     kopi->tipe = cur->tipe;
@@ -97,8 +105,10 @@ static InstruksiRA *optimalkan_dengan(const InstruksiRA *daftar) {
 }
 
 static bool modul_sama(const InstruksiRA *a, const InstruksiRA *b) {
-  if (!a->modul && !b->modul) return true;
-  if (!a->modul || !b->modul) return false;
+  if (!a->modul && !b->modul)
+    return true;
+  if (!a->modul || !b->modul)
+    return false;
   return strcmp(a->modul, b->modul) == 0;
 }
 
@@ -110,17 +120,22 @@ static InstruksiRA *buang_modul_kosong(InstruksiRA *daftar) {
     InstruksiRA *grup[256];
     int n = 0;
 
-    for (InstruksiRA *g = daftar; g && n < 256 && modul_sama(g, daftar); g = g->next) grup[n++] = g;
-    if (n == 0) break;
+    for (InstruksiRA *g = daftar; g && n < 256 && modul_sama(g, daftar);
+         g = g->next)
+      grup[n++] = g;
+    if (n == 0)
+      break;
 
     InstruksiRA *p = grup[n - 1]->next;
 
     bool ada_kode = false;
     for (int i = 0; i < n; i++)
-      if (grup[i]->badan) ada_kode = true;
+      if (grup[i]->badan)
+        ada_kode = true;
 
     if (ada_kode) {
-      for (int i = 0; i < n; i++) dorong(&kepala, &ekor, grup[i]);
+      for (int i = 0; i < n; i++)
+        dorong(&kepala, &ekor, grup[i]);
     }
 
     daftar = p;
@@ -133,14 +148,18 @@ InstruksiRA *optimalkan(const InstruksiRA *daftar) {
   kumpulkan(daftar);
 
   for (int i = 0; i < jumlah_tabel; i++)
-    if (tabel[i].fungsi->eks) tabel[i].hidup = true;
+    if (tabel[i].fungsi->eks)
+      tabel[i].hidup = true;
 
   for (const InstruksiRA *cur = daftar; cur; cur = cur->next) {
-    if (cur->tipe != RA_FUNGSI || cur->modul) continue;
-    if (strcmp(cur->nama, "titik_masuk") != 0) continue;
+    if (cur->tipe != RA_FUNGSI || cur->modul)
+      continue;
+    if (strcmp(cur->nama, "titik_masuk") != 0)
+      continue;
 
     int idx = cari(cur->nama);
-    if (idx < 0) continue;
+    if (idx < 0)
+      continue;
 
     tabel[idx].hidup = true;
     tandai(cur->badan);

@@ -16,13 +16,13 @@ typedef enum {
 
 typedef struct InstruksiRA {
   TipeRA tipe;
-  char *nama;              
-  char **nilai;            
-  TipeNilaiRA *tipe_nilai; 
+  char *nama;
+  char **nilai;
+  TipeNilaiRA *tipe_nilai;
   int jumlah;
-  bool eks;                
-  bool pub;                
-  char *modul;             
+  bool eks;
+  bool pub;
+  char *modul;
   struct InstruksiRA *badan;
   struct InstruksiRA *next;
 } InstruksiRA;
