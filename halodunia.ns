@@ -1,5 +1,6 @@
-# halodunia.ns
+# Ini adalah komentar
 
-'cetak.ns'
+'cetak.ns' # Muat berkas cetak.ns
 
+# Panggil fungsi untuk mencetak 'Halo Dunia!'
 cetak('Halo Dunia!')
