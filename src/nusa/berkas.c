@@ -45,7 +45,7 @@ static char* jalur_absolut_win(const char* jalur) {
 }
 #endif
 
-static char* jalur_kanonis(const char* jalur) {
+char* jalur_kanonis(const char* jalur) {
     if (!jalur) return NULL;
 #ifdef _WIN32
     char* a = jalur_absolut_win(jalur);

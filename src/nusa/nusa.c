@@ -8,6 +8,9 @@
 #include "nusa/urai_arg.h"
 #include "nusa/pengurai.h"
 #include "nusa/pesemantik.h"
+#include "nusa/ra.h"
+#include "nusa/optimasi.h"
+#include "nusa/brkt.h"
 
 void cetak_info() {
   printf("Penggunaan: nusa [argumen] <berkas>\n\n");
@@ -165,6 +168,23 @@ int main(int argc, char **argv) {
 
       int galat = pesemantik(psa);
       if(!galat) printf("Tidak ada kesalahan\n");
+
+      if (!galat) {
+        printf("\nRA:\n");
+        InstruksiRA *ra = bangkitkan_ra(psa);
+        InstruksiRA *ra_imp = tambah_impor_ra(ra, ra);
+        cetak_ra_permodul(ra_imp);
+
+        printf("\nOptimasi:\n");
+        InstruksiRA *ra_opt = optimalkan(ra);
+        InstruksiRA *ra_opt_imp = tambah_impor_ra(ra_opt, ra_opt);
+        cetak_ra_permodul(ra_opt_imp);
+
+        bangkitkan_brkt(ra_opt_imp);
+
+        bersihkan_ra(ra_imp);
+        bersihkan_ra(ra_opt_imp);
+      }
 
       bersihkan_psa(psa);
     } else {

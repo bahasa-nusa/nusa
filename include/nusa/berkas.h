@@ -13,4 +13,6 @@ void bersihkan_daftar_dimuat();
 
 char* gabung_jalur_relatif(const char* dasar, const char* jalur);
 
+char* jalur_kanonis(const char* jalur);
+
 #endif

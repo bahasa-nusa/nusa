@@ -11,9 +11,10 @@ typedef enum {
   PSA_PENGENAL,
   PSA_NILAI_UNTAIAN,
   PSA_NILAI_BILANGAN,
-  PSA_KATA_KUNCI,
-  PSA_TIPE_DATA_BILANGAN,
-  PSA_TIPE_DATA_UNTAIAN,
+  PSA_KATA_KUNCI,         // eks
+  PSA_KATA_KUNCI_PUBLIK,  // pub
+  PSA_TIPE_DATA_BILANGAN, // b32
+  PSA_TIPE_DATA_UNTAIAN,  // unt
 } TipePSA;
 
 typedef struct PSA PSA;
@@ -22,6 +23,7 @@ struct PSA {
   char *teks;
   int panjang;
   char *jalur;
+  char *modul;
   bool titik_masuk;
   PSA **anak;
   int jumlah_anak;

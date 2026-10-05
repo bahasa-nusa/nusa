@@ -5,6 +5,9 @@
 
 typedef struct {
   char *nama;
+  char *modul;
+  bool pub;
+  bool eks;
   int jumlah_parameter;
   char **nama_parameter;
   TipePSA *tipe_parameter;
@@ -19,18 +22,41 @@ typedef struct {
 
 static TabelFungsi tabel;
 
-static Fungsi *cari_fungsi(const char *nama) {
+static bool sama_modul(const char *a, const char *b) {
+  if (!a && !b) return true;
+  if (!a || !b) return false;
+  return strcmp(a, b) == 0;
+}
+
+static Fungsi *cari_fungsi(const char *nama, const char *modul_pemanggil) {
   for (int i = 0; i < tabel.jumlah; i++) {
-    if (strcmp(tabel.data[i].nama, nama) == 0) return &tabel.data[i];
+    if (strcmp(tabel.data[i].nama, nama) == 0 && sama_modul(tabel.data[i].modul, modul_pemanggil))
+      return &tabel.data[i];
+  }
+  for (int i = 0; i < tabel.jumlah; i++) {
+    if (strcmp(tabel.data[i].nama, nama) == 0 && (tabel.data[i].pub || tabel.data[i].eks))
+      return &tabel.data[i];
   }
 
   return NULL;
 }
 
-static bool daftarkan(const PSA *deklarasi) {
+static Fungsi *cari_privat_lain(const char *nama, const char *modul_pemanggil) {
+  for (int i = 0; i < tabel.jumlah; i++) {
+    if (strcmp(tabel.data[i].nama, nama) == 0 && !sama_modul(tabel.data[i].modul, modul_pemanggil))
+      return &tabel.data[i];
+  }
+
+  return NULL;
+}
+
+static bool daftarkan(const PSA *deklarasi, const char *modul) {
   int kapasitas = deklarasi->jumlah_anak > 0 ? deklarasi->jumlah_anak : 1;
 
-  if (cari_fungsi(deklarasi->teks)) return false;
+  for (int i = 0; i < tabel.jumlah; i++) {
+    if (strcmp(tabel.data[i].nama, deklarasi->teks) == 0 && sama_modul(tabel.data[i].modul, modul))
+      return false;
+  }
 
   tabel.data = realloc(tabel.data, sizeof(Fungsi) * (tabel.jumlah + 1));
   Fungsi *fn = &tabel.data[tabel.jumlah];
@@ -38,6 +64,9 @@ static bool daftarkan(const PSA *deklarasi) {
 
   fn->nama = malloc(strlen(deklarasi->teks) + 1);
   strcpy(fn->nama, deklarasi->teks);
+  fn->modul = modul ? strdup(modul) : NULL;
+  fn->pub = false;
+  fn->eks = false;
   fn->jumlah_parameter = 0;
   fn->nama_parameter = malloc(sizeof(char *) * kapasitas);
   fn->tipe_parameter = malloc(sizeof(TipePSA) * kapasitas);
@@ -45,6 +74,9 @@ static bool daftarkan(const PSA *deklarasi) {
 
   for (int i = 0; i < deklarasi->jumlah_anak; i++) {
     const PSA *anak = deklarasi->anak[i];
+
+    if (anak->tipe == PSA_KATA_KUNCI) { fn->eks = true; continue; }
+    if (anak->tipe == PSA_KATA_KUNCI_PUBLIK) { fn->pub = true; continue; }
 
     if (anak->tipe == PSA_PENGENAL) {
       fn->nama_parameter[fn->jumlah_parameter] = malloc(strlen(anak->teks) + 1);
@@ -74,15 +106,24 @@ static const char *nama_tipe_semantik(TipePSA tipe) {
 }
 
 static int cek_panggilan(const PSA *panggilan, const char *jalur) {
-  Fungsi *fn = cari_fungsi(panggilan->teks);
+  Fungsi *fn = cari_fungsi(panggilan->teks, panggilan->modul);
 
   if (!fn) {
+    Fungsi *privat = cari_privat_lain(panggilan->teks, panggilan->modul);
+
+    if (privat) {
+      printf("Kesalahan: '%s' di modul '%s' bersifat privat, tidak bisa dipanggil dari '%s' (di %s)\n",
+        privat->nama, privat->modul ? privat->modul : "?", panggilan->modul ? panggilan->modul : "?", jalur);
+      return 1;
+    }
+
     printf("Kesalahan: fungsi '%s' tidak dideklarasikan (di %s)\n", panggilan->teks, jalur);
     return 1;
   }
 
   int jml_argumen = panggilan->jumlah_anak;
-  while (jml_argumen > 0 && panggilan->anak[jml_argumen - 1]->tipe == PSA_KATA_KUNCI) {
+  while (jml_argumen > 0 && (panggilan->anak[jml_argumen - 1]->tipe == PSA_KATA_KUNCI
+                             || panggilan->anak[jml_argumen - 1]->tipe == PSA_KATA_KUNCI_PUBLIK)) {
     jml_argumen--;
   }
 
@@ -120,6 +161,7 @@ static void bersihkan_tabel(void) {
     free(fn->nama_parameter);
     free(fn->tipe_parameter);
     free(fn->bertipe);
+    free(fn->modul);
     free(fn->nama);
   }
 
@@ -138,8 +180,9 @@ int pesemantik(const PSA *akar) {
       const PSA *item = berkas->anak[j];
       if (item->tipe != PSA_DEKLARASI) continue;
 
-      if (!daftarkan(item)) {
-        printf("Kesalahan: '%s' dideklarasikan lebih dari sekali\n", item->teks);
+      if (!daftarkan(item, berkas->modul)) {
+        printf("Kesalahan: '%s' dideklarasikan lebih dari sekali di modul '%s'\n",
+          item->teks, berkas->modul ? berkas->modul : "?");
         galat++;
       }
     }
