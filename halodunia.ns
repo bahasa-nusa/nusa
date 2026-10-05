@@ -1,0 +1,5 @@
+# halodunia.ns
+
+'cetak.ns'
+
+cetak('Halo Dunia!')
