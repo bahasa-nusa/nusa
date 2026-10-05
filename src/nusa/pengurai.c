@@ -75,12 +75,23 @@ void cetak_psa(const PSA *node, int indent) {
   }
 
   for (int i = 0; i < indent; i++) printf("  ");
-  const char *nama_tipe[] = {"PROGRAM", "BERKAS", "PANGGILAN", "PENGENAL", "NILAI UNTAIAN", "KATA KUNCI"};
+  const char *nama_tipe[] = {"PROGRAM", "BERKAS", "PANGGILAN", "DEKLARASI", "PENGENAL", "NILAI UNTAIAN", "NILAI BILANGAN", "KATA KUNCI", "TIPE DATA B32", "TIPE DATA UNTAIAN"};
   printf("[%s] %.*s\n", nama_tipe[node->tipe], node->panjang, node->teks);
 
   for (int i = 0; i < node->jumlah_anak; i++) {
     cetak_psa(node->anak[i], indent + 1);
   }
+}
+
+static bool deklarasi_menunggu(const char *ptr) {
+  Tolek t;
+  while ((ptr = penolek(ptr, &t)) && t.tipe != TIPE_TOLEK_AKHIR) {
+    if (t.tipe == TIPE_TOLEK_KURUNG_BULAT_TUTUP) break;
+    if (t.tipe == TIPE_TOLEK_TIPE_DATA_UNTAIAN || t.tipe == TIPE_TOLEK_TIPE_DATA_BILANGAN) {
+      return true;
+    }
+  }
+  return false;
 }
 
 static PSA *urai_berkas(const char *isi, const char *jalur, bool titik_masuk) {
@@ -153,32 +164,21 @@ static PSA *urai_berkas(const char *isi, const char *jalur, bool titik_masuk) {
         
         bool adalah_deklarasi = false;
         if (lanjut2.tipe == TIPE_TOLEK_PENGENAL) {
-          Tolek lanjut3;
-          const char *ptr_lanjut3 = penolek(ptr_lanjut2, &lanjut3);
-
-          if (lanjut3.tipe == TIPE_TOLEK_KATA_KUNCI_UNTAIAN) {
-            Tolek lanjut4;
-            const char *ptr_lanjut4 = penolek(ptr_lanjut3, &lanjut4);
-
-            if (lanjut4.tipe == TIPE_TOLEK_KURUNG_BULAT_TUTUP) {
-              Tolek lanjut5;
-              const char *ptr_lanjut5 = penolek(ptr_lanjut4, &lanjut5);
-
-              if (lanjut5.tipe == TIPE_TOLEK_KATA_KUNCI_EKSTERNAL) {
-                adalah_deklarasi = true;
-              }
-            }
-          }
+          adalah_deklarasi = deklarasi_menunggu(ptr_lanjut2);
         }
         
         if (adalah_deklarasi) {
-          PSA *node = buat_node(PSA_PENGENAL, tolek.teks, tolek.panjang);
+          PSA *node = buat_node(PSA_DEKLARASI, tolek.teks, tolek.panjang);
           ptr = ptr_lanjut;
           
           while ((ptr = penolek(ptr, &lanjut)) && lanjut.tipe != TIPE_TOLEK_KURUNG_BULAT_TUTUP && lanjut.tipe != TIPE_TOLEK_AKHIR) {
             if (lanjut.tipe == TIPE_TOLEK_PENGENAL) {
               tambah_anak(node, buat_node(PSA_PENGENAL, lanjut.teks, lanjut.panjang));
-            } else if (lanjut.tipe == TIPE_TOLEK_KATA_KUNCI_UNTAIAN || lanjut.tipe == TIPE_TOLEK_KATA_KUNCI_EKSTERNAL) {
+            } else if (lanjut.tipe == TIPE_TOLEK_TIPE_DATA_UNTAIAN) {
+              tambah_anak(node, buat_node(PSA_TIPE_DATA_UNTAIAN, lanjut.teks, lanjut.panjang));
+            } else if (lanjut.tipe == TIPE_TOLEK_TIPE_DATA_BILANGAN) {
+              tambah_anak(node, buat_node(PSA_TIPE_DATA_BILANGAN, lanjut.teks, lanjut.panjang));
+            } else if (lanjut.tipe == TIPE_TOLEK_KATA_KUNCI_EKSTERNAL) {
               tambah_anak(node, buat_node(PSA_KATA_KUNCI, lanjut.teks, lanjut.panjang));
             }
           }
@@ -201,21 +201,33 @@ static PSA *urai_berkas(const char *isi, const char *jalur, bool titik_masuk) {
               tambah_anak(node, buat_node(PSA_PENGENAL, lanjut.teks, lanjut.panjang));
             } else if (lanjut.tipe == TIPE_TOLEK_NILAI_UNTAIAN) {
               tambah_anak(node, buat_node(PSA_NILAI_UNTAIAN, lanjut.teks, lanjut.panjang));
-            } else if (lanjut.tipe == TIPE_TOLEK_KATA_KUNCI_EKSTERNAL || lanjut.tipe == TIPE_TOLEK_KATA_KUNCI_UNTAIAN) {
+            } else if (lanjut.tipe == TIPE_TOLEK_NILAI_BILANGAN) {
+              tambah_anak(node, buat_node(PSA_NILAI_BILANGAN, lanjut.teks, lanjut.panjang));
+            } else if (lanjut.tipe == TIPE_TOLEK_TIPE_DATA_UNTAIAN) {
+              tambah_anak(node, buat_node(PSA_TIPE_DATA_UNTAIAN, lanjut.teks, lanjut.panjang));
+            } else if (lanjut.tipe == TIPE_TOLEK_TIPE_DATA_BILANGAN) {
+              tambah_anak(node, buat_node(PSA_TIPE_DATA_BILANGAN, lanjut.teks, lanjut.panjang));
+            } else if (lanjut.tipe == TIPE_TOLEK_KATA_KUNCI_EKSTERNAL) {
               tambah_anak(node, buat_node(PSA_KATA_KUNCI, lanjut.teks, lanjut.panjang));
             }
           }
-          
+
           tambah_anak(modul, node);
         }
       } else {
         PSA *node = buat_node(PSA_PENGENAL, tolek.teks, tolek.panjang);
         tambah_anak(modul, node);
       }
-    } else if (tolek.tipe == TIPE_TOLEK_KATA_KUNCI_EKSTERNAL || tolek.tipe == TIPE_TOLEK_KATA_KUNCI_UNTAIAN) {
+    } else if (tolek.tipe == TIPE_TOLEK_KATA_KUNCI_EKSTERNAL) {
         tambah_anak(modul, buat_node(PSA_KATA_KUNCI, tolek.teks, tolek.panjang));
+    } else if (tolek.tipe == TIPE_TOLEK_TIPE_DATA_UNTAIAN) {
+        tambah_anak(modul, buat_node(PSA_TIPE_DATA_UNTAIAN, tolek.teks, tolek.panjang));
+    } else if (tolek.tipe == TIPE_TOLEK_TIPE_DATA_BILANGAN) {
+        tambah_anak(modul, buat_node(PSA_TIPE_DATA_BILANGAN, tolek.teks, tolek.panjang));
     } else if (tolek.tipe == TIPE_TOLEK_NILAI_UNTAIAN) {
         tambah_anak(modul, buat_node(PSA_NILAI_UNTAIAN, tolek.teks, tolek.panjang));
+    } else if (tolek.tipe == TIPE_TOLEK_NILAI_BILANGAN) {
+        tambah_anak(modul, buat_node(PSA_NILAI_BILANGAN, tolek.teks, tolek.panjang));
     }
   }
 

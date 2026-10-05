@@ -1,6 +1,10 @@
 # Ini adalah komentar
 
 'cetak.ns' # Muat berkas cetak.ns
+'keluar.ns' # Muat berkas keluar.ns
 
 # Panggil fungsi untuk mencetak 'Halo Dunia!'
 cetak('Halo Dunia!')
+
+# Panggil fungsi untuk keluar
+keluar(0)
