@@ -3,6 +3,7 @@
 #include "nusa/berkas.h"
 #include "nusa/penolek.h"
 #include "nusa/urai_arg.h"
+#include "nusa/pengurai.h"
 
 void cetak_info() {
   printf("Penggunaan: nusa [argumen] <berkas>\n\n");
@@ -31,14 +32,25 @@ int main(int argc, char **argv) {
       return 1;
     }
 
+    // Tolek
+    printf("Tolek:\n");
     const char *ptr = isi_berkas;
     Tolek tolek;
     while ((ptr = penolek(ptr, &tolek)) && tolek.tipe != TIPE_TOLEK_AKHIR) {
       printf("%22.*s | %s\n", tolek.panjang, tolek.teks,
              nama_tolek(tolek.tipe));
     }
-
     printf("%22.*s | %s\n", tolek.panjang, tolek.teks, nama_tolek(tolek.tipe));
+
+    // PSA
+    printf("\nPSA:\n");
+    PSA *psa = urai(isi_berkas);
+    if (psa) {
+      cetak_psa(psa, 0);
+      bersihkan_psa(psa);
+    } else {
+      printf("Gagal mengurai: %s\n", pesan_urai());
+    }
 
     bersihkan_berkas(isi_berkas);
   } else {
