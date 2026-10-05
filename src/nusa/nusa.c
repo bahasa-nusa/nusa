@@ -7,6 +7,7 @@
 #include "nusa/penolek.h"
 #include "nusa/urai_arg.h"
 #include "nusa/pengurai.h"
+#include "nusa/pesemantik.h"
 
 void cetak_info() {
   printf("Penggunaan: nusa [argumen] <berkas>\n\n");
@@ -84,7 +85,6 @@ static void kumpul_tolek(const char *isi, const char *jalur, bool titik_masuk) {
     di_atas = false;
   }
   
-  /* Append to list */
   if (!daftar_info) {
     daftar_info = ib;
   } else {
@@ -157,9 +157,15 @@ int main(int argc, char **argv) {
     printf("PSA:\n");
     bersihkan_daftar_dimuat();
     tandai_berkas_dimuat(arg.input_file);
+
     PSA *psa = urai(isi_berkas, arg.input_file);
     if (psa) {
       cetak_psa(psa, 0);
+      printf("\nPesemantik:\n");
+
+      int galat = pesemantik(psa);
+      if(!galat) printf("Tidak ada kesalahan\n");
+
       bersihkan_psa(psa);
     } else {
       printf("Gagal mengurai: %s\n", pesan_urai());
