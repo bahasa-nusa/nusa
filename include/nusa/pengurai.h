@@ -1,8 +1,11 @@
 #ifndef NUSA_PENGURAI_H
 #define NUSA_PENGURAI_H
 
+#include <stdbool.h>
+
 typedef enum {
   PSA_PROGRAM,
+  PSA_BERKAS,
   PSA_PANGGILAN,
   PSA_PENGENAL,
   PSA_NILAI_UNTAIAN,
@@ -12,13 +15,15 @@ typedef enum {
 typedef struct PSA PSA;
 struct PSA {
   TipePSA tipe;
-  const char *teks;
+  char *teks;
   int panjang;
+  char *jalur;
+  bool titik_masuk;
   PSA **anak;
   int jumlah_anak;
 };
 
-PSA *urai(const char *isi);
+PSA *urai(const char *isi, const char *jalur_berkas);
 
 const char *pesan_urai();
 
