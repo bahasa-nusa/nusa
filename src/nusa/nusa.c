@@ -12,7 +12,8 @@
 #include "nusa/pengurai.h"
 #include "nusa/penolek.h"
 #include "nusa/pesemantik.h"
-#include "nusa/ra.h"
+#include "nusa/target.h"
+
 #include "nusa/urai_arg.h"
 
 void cetak_info() {
@@ -34,9 +35,11 @@ void cetak_info() {
   printf("-brkt <sistem-operasi> <arsitektur> [-o <berkas>]      Bahasa "
          "Rakitan.\n\n");
   printf("Sistem Operasi Yang Tersedia:\n");
-  printf("  windows\n\n");
+  printf("  windows\n");
+  printf("  linux\n\n");
   printf("Arsitektur Yang Tersedia:\n");
   printf("  intel_64\n");
+  printf("  intel_32\n");
 }
 
 static char *salin(const char *s) {
@@ -219,15 +222,19 @@ int main(int argc, char **argv) {
                    "<arsitektur>\n");
             return 1;
           }
-          if (strcmp(arg.so, "windows") != 0) {
-            printf("<sistem-operasi> saat ini hanya mendukung 'windows'\n");
+          if (strcmp(arg.so, "windows") != 0 && strcmp(arg.so, "linux") != 0) {
+            printf("<sistem-operasi> saat ini hanya mendukung 'windows' atau "
+                   "'linux'\n");
             return 1;
           }
-          if (strcmp(arg.arsitektur, "intel_64") != 0) {
-            printf("<arsitektur> saat ini hanya mendukung 'intel_64'\n");
+          if (strcmp(arg.arsitektur, "intel_64") != 0 &&
+              strcmp(arg.arsitektur, "intel_32") != 0) {
+            printf("<arsitektur> saat ini hanya mendukung 'intel_64' atau "
+                   "'intel_32'\n");
             return 1;
           }
-          InstruksiRA *ra = bangkitkan_ra(psa);
+          set_target(arg.so, arg.arsitektur);
+          InstruksiRA *ra = bangkitkan_ra(psa, arg.so, arg.arsitektur);
           InstruksiRA *ra_imp = tambah_impor_ra(ra, ra);
           if (arg.ra) {
             printf("\nRA:\n");

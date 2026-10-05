@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "nusa/ra.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -217,7 +218,11 @@ static void mangle(const InstruksiRA *daftar) {
   }
 }
 
-InstruksiRA *bangkitkan_ra(const PSA *akar) {
+InstruksiRA *bangkitkan_ra(const PSA *akar, const char *so,
+                           const char *arsitektur) {
+  (void)so;
+  (void)arsitektur;
+  
   InstruksiRA *kepala = NULL;
   InstruksiRA *ekor = NULL;
   InstruksiRA *utama = NULL;

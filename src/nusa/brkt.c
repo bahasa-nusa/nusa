@@ -2,20 +2,26 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "nusa/brkt.h"
+#include "nusa/target.h"
+
 #include <stdio.h>
 #include <string.h>
 
 static const char *register_argumen(int i) {
-  static const char *reg[] = {"%rcx", "%rdx", "%r8", "%r9"};
-  return i < 4 ? reg[i] : "stack";
+  const Target *t = get_target();
+  if (i < t->banyak_reg) {
+    return t->reg[i];
+  }
+  return "stack";
 }
 
 static void cetak_simbol(FILE *out, const InstruksiRA *cur) {
+  const Target *t = get_target();
   fprintf(out, "%s", cur->nama);
 
   if (cur->eks)
     return;
-  if (cur->pub)
+  if (cur->pub && strcmp(t->so, "windows") == 0)
     fprintf(out, "_pub");
 }
 
@@ -101,12 +107,13 @@ static void cetak_instruksi(FILE *out, const InstruksiRA *ins) {
 
       fprintf(out, "    ret\n");
     } else if (cur->tipe == RA_PANGGIL) {
+      const Target *t = get_target();
       for (int i = 0; i < cur->jumlah; i++) {
         if (cur->tipe_nilai[i] == RA_UNTAIAN) {
           char label[128];
           label_string(label, sizeof(label), indeks_string++);
           fprintf(out, "    lea %s(%%rip), %s\n", label, register_argumen(i));
-        } else if (i < 6) {
+        } else if (i < t->banyak_reg) {
           fprintf(out, "    mov $%s, %s\n", cur->nilai[i], register_argumen(i));
         } else {
           fprintf(out, "    ; arg %d lewat stack: %s\n", i, cur->nilai[i]);
@@ -123,7 +130,7 @@ static void cetak_instruksi(FILE *out, const InstruksiRA *ins) {
 void bangkitkan_brkt(const InstruksiRA *daftar, const char *output_file) {
   if (!output_file) {
     printf("\nBahasa Rakitan (BRKT):\n");
-    printf("; Target: Assembly x86_64 (Stub)\n");
+    printf("; Target: %s %s\n", get_target()->so, get_target()->arsitektur);
   }
 
   const char *daftar_modul[256];
@@ -198,7 +205,7 @@ void bangkitkan_brkt(const InstruksiRA *daftar, const char *output_file) {
 
     if (output_file && out) {
       fclose(out);
-      break; // output file specified, write first module or combined
+      break;
     }
   }
 
