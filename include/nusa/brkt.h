@@ -6,6 +6,6 @@
 
 #include "nusa/ra.h"
 
-void bangkitkan_brkt(const InstruksiRA *daftar);
+void bangkitkan_brkt(const InstruksiRA *daftar, const char *output_file);
 
 #endif

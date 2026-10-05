@@ -120,9 +120,11 @@ static void cetak_instruksi(FILE *out, const InstruksiRA *ins) {
   }
 }
 
-void bangkitkan_brkt(const InstruksiRA *daftar) {
-  printf("\nBahasa Rakitan (BRKT):\n");
-  printf("; Target: Assembly x86_64 (Stub)\n");
+void bangkitkan_brkt(const InstruksiRA *daftar, const char *output_file) {
+  if (!output_file) {
+    printf("\nBahasa Rakitan (BRKT):\n");
+    printf("; Target: Assembly x86_64 (Stub)\n");
+  }
 
   const char *daftar_modul[256];
   int jumlah_modul = 0;
@@ -143,63 +145,64 @@ void bangkitkan_brkt(const InstruksiRA *daftar) {
 
   for (int m_idx = 0; m_idx < jumlah_modul; m_idx++) {
     const char *m = daftar_modul[m_idx];
-    printf("\nBerkas %s:\n", m);
+    if (!output_file) {
+      printf("\nBerkas %s:\n", m);
+    }
 
-    char nama_file[256];
-    if (strcmp(m, "<program>") == 0)
-      snprintf(nama_file, sizeof(nama_file), "titik_masuk.s");
-    else
-      snprintf(nama_file, sizeof(nama_file), "%s.s", m);
-
-    FILE *f = fopen(nama_file, "w");
-    FILE *sTu[2] = {stdout, f};
-    int jumlah_sTu = f ? 2 : 1;
-    if (!f)
-      fprintf(stderr, "BRKT: gagal membuka %s\n", nama_file);
-
-    for (int s = 0; s < jumlah_sTu; s++) {
-      FILE *out = sTu[s];
-
-      indeks_string = 0;
-      fprintf(out, ".section .rodata\n");
-      for (const InstruksiRA *cur = daftar; cur; cur = cur->next) {
-        const char *cm = cur->modul ? cur->modul : "<program>";
-        if (strcmp(cm, m) != 0)
-          continue;
-
-        if (cur->badan)
-          cetak_rodata(out, cur->badan);
-        if (cur->tipe != RA_PANGGIL)
-          continue;
-
-        for (int i = 0; i < cur->jumlah; i++) {
-          if (cur->tipe_nilai[i] != RA_UNTAIAN)
-            continue;
-
-          char label[128];
-          label_string(label, sizeof(label), indeks_string++);
-
-          fprintf(out, "%s:\n", label);
-          cetak_string_rodata(out, cur->nilai[i]);
-        }
+    FILE *out = NULL;
+    if (output_file) {
+      out = fopen(output_file, "w");
+      if (!out) {
+        fprintf(stderr, "BRKT: gagal membuka berkas output %s\n", output_file);
+        return;
       }
+    } else {
+      out = stdout;
+    }
 
-      indeks_string = 0;
-      fprintf(out, ".text\n");
-      for (const InstruksiRA *cur = daftar; cur; cur = cur->next) {
-        const char *cm = cur->modul ? cur->modul : "<program>";
-        if (strcmp(cm, m) != 0)
+    indeks_string = 0;
+    fprintf(out, ".section .rodata\n");
+    for (const InstruksiRA *cur = daftar; cur; cur = cur->next) {
+      const char *cm = cur->modul ? cur->modul : "<program>";
+      if (strcmp(cm, m) != 0)
+        continue;
+
+      if (cur->badan)
+        cetak_rodata(out, cur->badan);
+      if (cur->tipe != RA_PANGGIL)
+        continue;
+
+      for (int i = 0; i < cur->jumlah; i++) {
+        if (cur->tipe_nilai[i] != RA_UNTAIAN)
           continue;
 
-        InstruksiRA single = *cur;
-        single.next = NULL;
-        cetak_instruksi(out, &single);
-      }
+        char label[128];
+        label_string(label, sizeof(label), indeks_string++);
 
-      if (out != stdout)
-        fclose(out);
+        fprintf(out, "%s:\n", label);
+        cetak_string_rodata(out, cur->nilai[i]);
+      }
+    }
+
+    indeks_string = 0;
+    fprintf(out, ".text\n");
+    for (const InstruksiRA *cur = daftar; cur; cur = cur->next) {
+      const char *cm = cur->modul ? cur->modul : "<program>";
+      if (strcmp(cm, m) != 0)
+        continue;
+
+      InstruksiRA single = *cur;
+      single.next = NULL;
+      cetak_instruksi(out, &single);
+    }
+
+    if (output_file && out) {
+      fclose(out);
+      break; // output file specified, write first module or combined
     }
   }
 
-  printf("; Selesai Code Gen\n");
+  if (!output_file) {
+    printf("; Selesai Code Gen\n");
+  }
 }

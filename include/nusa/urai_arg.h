@@ -10,6 +10,15 @@ typedef struct {
   bool versi;
   bool info;
   const char *input_file;
+  bool tolek;
+  bool urai;
+  bool smtk;
+  bool ra;
+  bool opt;
+  bool brkt;
+  const char *so;
+  const char *arsitektur;
+  const char *output;
 } Arg;
 
 Arg urai_arg(int jum_arg, char **isi_arg);

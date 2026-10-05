@@ -16,10 +16,27 @@
 #include "nusa/urai_arg.h"
 
 void cetak_info() {
-  printf("Penggunaan: nusa [argumen] <berkas>\n\n");
+  printf("Penggunaan: nusa <argumen> [berkas]\n\n");
   printf("Opsi:\n");
-  printf("-v, --versi     Untuk melihat versi.\n");
-  printf("-i, --info      Untuk melihat informasi penggunaan.\n");
+  printf("-v, --versi                                            Untuk melihat "
+         "versi.\n");
+  printf("-i, --info                                             Untuk melihat "
+         "informasi penggunaan.\n");
+  printf("-tolek                                                 Analisis "
+         "token.\n");
+  printf("-urai                                                  Penguraian "
+         "pohon sintaksis abstrak (PSA).\n");
+  printf("-smtk                                                  Pemeriksaan "
+         "semantik.\n");
+  printf("-ra <sistem-operasi> <arsitektur>                      Representasi "
+         "Antara.\n");
+  printf("-opt <sistem-operasi> <arsitektur>                     Optimasi.\n");
+  printf("-brkt <sistem-operasi> <arsitektur> [-o <berkas>]      Bahasa "
+         "Rakitan.\n\n");
+  printf("Sistem Operasi Yang Tersedia:\n");
+  printf("  windows\n\n");
+  printf("Arsitektur Yang Tersedia:\n");
+  printf("  intel_64\n");
 }
 
 static char *salin(const char *s) {
@@ -155,6 +172,13 @@ int main(int argc, char **argv) {
   }
 
   if (arg.input_file) {
+    if (!arg.tolek && !arg.urai && !arg.smtk && !arg.ra && !arg.opt &&
+        !arg.brkt) {
+      printf("Argumen tidak valid.\n");
+      cetak_info();
+      return 1;
+    }
+
     const char *isi_berkas = baca_berkas(arg.input_file);
     if (!isi_berkas) {
       printf("Gagal baca: %s\n", arg.input_file);
@@ -162,52 +186,80 @@ int main(int argc, char **argv) {
     }
 
     // Tolek
-    printf("Tolek:\n");
-    bersihkan_daftar_dimuat();
-    tandai_berkas_dimuat(arg.input_file);
-    kumpul_tolek(isi_berkas, arg.input_file, true);
-    cetak_tolek_terkumpul();
+    if (arg.tolek) {
+      printf("Tolek:\n");
+      bersihkan_daftar_dimuat();
+      tandai_berkas_dimuat(arg.input_file);
+      kumpul_tolek(isi_berkas, arg.input_file, true);
+      cetak_tolek_terkumpul();
+    }
 
-    // PSA
-    printf("PSA:\n");
-    bersihkan_daftar_dimuat();
-    tandai_berkas_dimuat(arg.input_file);
-
-    PSA *psa = urai(isi_berkas, arg.input_file);
-    if (psa) {
-      cetak_psa(psa, 0);
-      printf("\nPesemantik:\n");
-
-      int galat = pesemantik(psa);
-      if (!galat)
-        printf("Tidak ada kesalahan\n");
-
-      if (!galat) {
-        printf("\nRA:\n");
-        InstruksiRA *ra = bangkitkan_ra(psa);
-        InstruksiRA *ra_imp = tambah_impor_ra(ra, ra);
-        cetak_ra_permodul(ra_imp);
-
-        printf("\nOptimasi:\n");
-        InstruksiRA *ra_opt = optimalkan(ra);
-        InstruksiRA *ra_opt_imp = tambah_impor_ra(ra_opt, ra_opt);
-        cetak_ra_permodul(ra_opt_imp);
-
-        bangkitkan_brkt(ra_opt_imp);
-
-        bersihkan_ra(ra_imp);
-        bersihkan_ra(ra_opt_imp);
+    // PSA (Urai)
+    if (arg.urai || arg.smtk || arg.ra || arg.opt || arg.brkt) {
+      if (arg.urai) {
+        printf("PSA:\n");
       }
+      bersihkan_daftar_dimuat();
+      tandai_berkas_dimuat(arg.input_file);
 
-      bersihkan_psa(psa);
-    } else {
-      printf("Gagal mengurai: %s\n", pesan_urai());
+      PSA *psa = urai(isi_berkas, arg.input_file);
+      if (psa) {
+        if (arg.urai) {
+          cetak_psa(psa, 0);
+        }
+        if (arg.smtk) {
+          printf("\nPesemantik:\n");
+          int galat = pesemantik(psa);
+          if (!galat)
+            printf("Tidak ada kesalahan\n");
+        }
+        if (arg.ra || arg.opt || arg.brkt) {
+          if (!arg.so || !arg.arsitektur) {
+            printf("-ra, -opt, atau -brkt memerlukan <sistem-operasi> dan "
+                   "<arsitektur>\n");
+            return 1;
+          }
+          if (strcmp(arg.so, "windows") != 0) {
+            printf("<sistem-operasi> saat ini hanya mendukung 'windows'\n");
+            return 1;
+          }
+          if (strcmp(arg.arsitektur, "intel_64") != 0) {
+            printf("<arsitektur> saat ini hanya mendukung 'intel_64'\n");
+            return 1;
+          }
+          InstruksiRA *ra = bangkitkan_ra(psa);
+          InstruksiRA *ra_imp = tambah_impor_ra(ra, ra);
+          if (arg.ra) {
+            printf("\nRA:\n");
+            cetak_ra_permodul(ra_imp);
+          }
+          if (arg.opt || arg.brkt) {
+            InstruksiRA *ra_opt = optimalkan(ra);
+            InstruksiRA *ra_opt_imp = tambah_impor_ra(ra_opt, ra_opt);
+            if (arg.opt) {
+              printf("\nOptimasi:\n");
+              cetak_ra_permodul(ra_opt_imp);
+            }
+            if (arg.brkt) {
+              bangkitkan_brkt(ra_opt_imp, arg.output);
+            }
+            bersihkan_ra(ra_imp);
+            bersihkan_ra(ra_opt_imp);
+          } else {
+            bersihkan_ra(ra_imp);
+          }
+        }
+        bersihkan_psa(psa);
+      } else {
+        printf("Gagal mengurai: %s\n", pesan_urai());
+      }
     }
 
     bersihkan_daftar_dimuat();
     bersihkan_berkas(isi_berkas);
   } else {
-    printf("Argumen tidak valid.\n");
+    if (argc > 1)
+      printf("Argumen tidak valid.\n");
     cetak_info();
   }
 
