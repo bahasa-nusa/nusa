@@ -1,6 +1,8 @@
-#include <string.h>
+// Copyright 2026 Pengembang Bahasa Pemrograman Nusa
+// SPDX-License-Identifier: Apache-2.0
 
 #include "nusa/urai_arg.h"
+#include <string.h>
 
 Arg urai_arg(int argc, char **argv) {
   Arg args = {0};

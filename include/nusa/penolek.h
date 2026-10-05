@@ -1,3 +1,6 @@
+// Copyright 2026 Pengembang Bahasa Pemrograman Nusa
+// SPDX-License-Identifier: Apache-2.0
+
 #ifndef NUSA_PENOLEK_H
 #define NUSA_PENOLEK_H
 

@@ -1,3 +1,6 @@
+// Copyright 2026 Pengembang Bahasa Pemrograman Nusa
+// SPDX-License-Identifier: Apache-2.0
+
 #include "nusa/pesemantik.h"
 #include <stdio.h>
 #include <stdlib.h>

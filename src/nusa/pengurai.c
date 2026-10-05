@@ -1,3 +1,6 @@
+// Copyright 2026 Pengembang Bahasa Pemrograman Nusa
+// SPDX-License-Identifier: Apache-2.0
+
 #include "nusa/pengurai.h"
 #include "nusa/berkas.h"
 #include "nusa/penolek.h"
@@ -5,7 +8,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 
 static const char *pesan_kesalahan = NULL;
 static char *akar_dasar = NULL;
