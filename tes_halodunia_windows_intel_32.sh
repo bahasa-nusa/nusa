@@ -1,7 +1,7 @@
 #!/bin/sh
 ./build.sh
 
-./build/nusa.exe -brkt windows intel_32 contoh/halodunia.ns -o halodunia.s
+./build/nusa.exe -brkt windows intel_32 kode/halodunia.ns -o halodunia.s
 
 ./so/windows/intel_32/program/as.exe -c halodunia.s -o halodunia.o
 
@@ -9,7 +9,7 @@
     -e titik_masuk \
     --subsystem console \
     halodunia.o \
-    ./so/windows/intel_32/pustaka/ptks.a \
+    ./so/windows/intel_32/pustaka/standar.a \
     -L./so/windows/intel_32/pustaka \
     -lkernel32 \
     -o halodunia.exe

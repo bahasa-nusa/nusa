@@ -3,7 +3,7 @@
 
 # Ini adalah komentar
 
-'ptks.ns' # Muat berkas pustaka standar
+'pustaka/standar.ns' # Muat berkas pustaka standar
 
 cetak('Halo Aerell!\n')
 
