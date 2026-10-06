@@ -40,10 +40,10 @@ Setelah build berhasil, install ke direktori tujuan dengan `cmake --install`:
 cmake --install build --prefix <direktori_tujuan>
 ```
 
-Contoh (install ke `C:/nusa`):
+Contoh (install ke `/c/nusa`):
 
 ```sh
-cmake --install build --prefix C:/nusa
+cmake --install build --prefix /c/nusa
 ```
 
 Yang terinstall:
@@ -51,8 +51,6 @@ Yang terinstall:
 - Kode pustaka bawaan Nusa
 - Alat dan pustaka yang dibutuhkan sistem operasi tertentu
 - LICENSE
-
-Tanpa `--prefix`, file diinstall ke direktori build.
 
 ## Cara Pakai
 
