@@ -5,7 +5,14 @@
 
 ./so/windows/intel_32/program/as.exe -c halodunia.s -o halodunia.o
 
-./so/windows/intel_32/program/ld.exe -e titik_masuk --subsystem console halodunia.o ./so/windows/intel_32/objek/ptks.o -L./so/windows/intel_32/pustaka -lkernel32 -o halodunia.exe
+./so/windows/intel_32/program/ld.exe \
+    -e titik_masuk \
+    --subsystem console \
+    halodunia.o \
+    ./so/windows/intel_32/pustaka/ptks.a \
+    -L./so/windows/intel_32/pustaka \
+    -lkernel32 \
+    -o halodunia.exe
 
 rm halodunia.o halodunia.s
 clear
