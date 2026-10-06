@@ -3,9 +3,9 @@
 
 ./build/nusa.exe -brkt windows intel_32 kode/halodunia.ns -o halodunia.s
 
-./so/windows/intel_32/program/as.exe -c halodunia.s -o halodunia.o
+./so/windows/intel_32/as.exe -c halodunia.s -o halodunia.o
 
-./so/windows/intel_32/program/ld.exe \
+./so/windows/intel_32/ld.exe \
     -e titik_masuk \
     --subsystem console \
     halodunia.o \
