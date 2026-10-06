@@ -84,6 +84,10 @@ static bool daftarkan(const PSA *deklarasi, const char *modul) {
   for (int i = 0; i < deklarasi->jumlah_anak; i++) {
     const PSA *anak = deklarasi->anak[i];
 
+    if (anak->tipe == PSA_BLOK_OS_ARSITEKTUR) {
+      continue;
+    }
+
     if (anak->tipe == PSA_KATA_KUNCI) {
       fn->eks = true;
       continue;

@@ -218,11 +218,75 @@ static void mangle(const InstruksiRA *daftar) {
   }
 }
 
+static bool blok_cocok(const PSA *blok, const char *so,
+                       const char *arsitektur) {
+  bool so_cocok = false;
+  bool arsitektur_cocok = false;
+
+  for (int i = 0; i < blok->jumlah_anak; i++) {
+    switch (blok->anak[i]->tipe) {
+    case PSA_SO_WINDOWS:
+      if (strcmp(so, "windows") == 0)
+        so_cocok = true;
+      break;
+    case PSA_SO_LINUX:
+      if (strcmp(so, "linux") == 0)
+        so_cocok = true;
+      break;
+    case PSA_ARS_INTEL_32:
+      if (strcmp(arsitektur, "intel_32") == 0)
+        arsitektur_cocok = true;
+      break;
+    case PSA_ARS_INTEL_64:
+      if (strcmp(arsitektur, "intel_64") == 0)
+        arsitektur_cocok = true;
+      break;
+    default:
+      break;
+    }
+  }
+
+  return so_cocok && arsitektur_cocok;
+}
+
+static void ambil_anak(const PSA *induk, const char *so, const char *arsitektur,
+                       InstruksiRA **deklarasi, InstruksiRA **ekor_deklarasi,
+                       InstruksiRA **badan, InstruksiRA **ekor_badan) {
+  for (int j = 0; j < induk->jumlah_anak; j++) {
+    const PSA *item = induk->anak[j];
+
+    if (item->tipe == PSA_BLOK_OS_ARSITEKTUR) {
+      if (blok_cocok(item, so, arsitektur))
+        ambil_anak(item, so, arsitektur, deklarasi, ekor_deklarasi, badan,
+                   ekor_badan);
+      continue;
+    }
+
+    if (item->tipe == PSA_DEKLARASI) {
+      InstruksiRA *ins = calloc(1, sizeof(InstruksiRA));
+      isi_dari_deklarasi(ins, item);
+      ins->modul = salin_modul(item->modul);
+
+      InstruksiRA *ekor_lokal = NULL;
+      ambil_anak(item, so, arsitektur, NULL, NULL, &ins->badan, &ekor_lokal);
+      if (deklarasi)
+        dorong(deklarasi, ekor_deklarasi, ins);
+      else
+        dorong(badan, ekor_badan, ins);
+      continue;
+    }
+
+    if (item->tipe == PSA_PANGGILAN) {
+      InstruksiRA *ins = calloc(1, sizeof(InstruksiRA));
+      isi_dari_panggilan(ins, item);
+      ins->modul = salin_modul(item->modul);
+      dorong(badan, ekor_badan, ins);
+    }
+  }
+}
+
 InstruksiRA *bangkitkan_ra(const PSA *akar, const char *so,
                            const char *arsitektur) {
-  (void)so;
-  (void)arsitektur;
-  
   InstruksiRA *kepala = NULL;
   InstruksiRA *ekor = NULL;
   InstruksiRA *utama = NULL;
@@ -243,21 +307,28 @@ InstruksiRA *bangkitkan_ra(const PSA *akar, const char *so,
 
     for (int j = 0; j < berkas->jumlah_anak; j++) {
       const PSA *item = berkas->anak[j];
-      if (item->tipe != PSA_DEKLARASI && item->tipe != PSA_PANGGILAN)
+
+      if (item->tipe == PSA_BLOK_OS_ARSITEKTUR) {
+        if (!blok_cocok(item, so, arsitektur))
+          continue;
+        ambil_anak(item, so, arsitektur, &kepala, &ekor, &badan_titik,
+                   &ekor_badan_titik);
         continue;
+      }
 
-      InstruksiRA *ins = calloc(1, sizeof(InstruksiRA));
-      if (item->tipe == PSA_DEKLARASI)
+      if (item->tipe == PSA_DEKLARASI) {
+        InstruksiRA *ins = calloc(1, sizeof(InstruksiRA));
         isi_dari_deklarasi(ins, item);
-      else
-        isi_dari_panggilan(ins, item);
-
-      ins->modul = salin_modul(berkas->modul);
-
-      if (item->tipe == PSA_DEKLARASI)
+        ins->modul = salin_modul(berkas->modul);
+        InstruksiRA *ekor_lokal = NULL;
+        ambil_anak(item, so, arsitektur, NULL, NULL, &ins->badan, &ekor_lokal);
         dorong(&kepala, &ekor, ins);
-      else
+      } else if (item->tipe == PSA_PANGGILAN) {
+        InstruksiRA *ins = calloc(1, sizeof(InstruksiRA));
+        isi_dari_panggilan(ins, item);
+        ins->modul = salin_modul(berkas->modul);
         dorong(&badan_titik, &ekor_badan_titik, ins);
+      }
     }
 
     titik->badan = badan_titik;

@@ -2,6 +2,9 @@
 
 .globl cetak
 
+.extern GetStdHandle
+.extern WriteConsoleA
+
 cetak:
     pushq %rbp
     movq %rsp, %rbp
@@ -32,3 +35,17 @@ strlen_done:
     add $8, %rsp
     leave
     ret
+
+.globl keluar
+
+.extern ExitProcess
+
+keluar:
+    pushq %rbp
+    movq %rsp, %rbp
+    
+    call ExitProcess
+
+    leave
+    ret
+    

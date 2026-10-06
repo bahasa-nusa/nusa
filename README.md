@@ -20,16 +20,16 @@
 
 > **Catatan:** Skrip-skrip berikut digunakan hanya untuk pengujian (`testing`).
 
-Terdapat 2 skrip yang tersedia di direktori utama:
+Terdapat 3 skrip yang tersedia di direktori utama:
 
 1. **`build.sh`**
    - **Fungsi:** Mengonfigurasi proyek menggunakan CMake dengan generator Ninja dan melakukan kompilasi sumber program Nusa.
    - **Cara jalankan:** `./build.sh`
    - **Output:** Menghasilkan direktori `build/` berisi biner utama kompilator `nusa` (atau `nusa.exe` di Windows).
 
-2. **`tes_halodunia.sh`**
-   - **Fungsi:** Menjalankan siklus lengkap—mengompilasi kompilator Nusa lewat `build.sh`, menguji kompilasi file sumber `.ns` (seperti `halodunia.ns`), merakit objek, membersihkan file sementara, dan menjalankan eksekusi akhir.
-   - **Cara jalankan:** `./tes_halodunia.sh`
+2. **`tes_halodunia_windows_intel_32.sh`** dan **`tes_halodunia_windows_intel_64.sh`**
+   - **Fungsi:** Menjalankan siklus lengkap—mengompilasi kompilator Nusa lewat `build.sh`, menguji kompilasi file sumber `.ns` (seperti `halodunia.ns`), merakit objek, membersihkan file sementara, dan menjalankan eksekusi akhir. Versi 32-bit memakai toolchain `so/windows/intel_32`, versi 64-bit memakai `so/windows/intel_64`.
+   - **Cara jalankan:** `./tes_halodunia_windows_intel_32.sh` atau `./tes_halodunia_windows_intel_64.sh`
    - **Output:** Eksekusi program contoh `halodunia.exe` yang langsung dijalankan otomatis setelah proses build selesai.
 
 ## Cara Pakai

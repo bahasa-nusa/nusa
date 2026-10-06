@@ -5,6 +5,7 @@
 #include "nusa/target.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 static const char *register_argumen(int i) {
@@ -17,12 +18,29 @@ static const char *register_argumen(int i) {
 
 static void cetak_simbol(FILE *out, const InstruksiRA *cur) {
   const Target *t = get_target();
-  fprintf(out, "%s", cur->nama);
+
+  if (strcmp(t->so, "windows") == 0 && !t->is_64) {
+    fprintf(out, "_%s", cur->nama);
+  } else {
+    fprintf(out, "%s", cur->nama);
+  }
 
   if (cur->eks)
     return;
   if (cur->pub && strcmp(t->so, "windows") == 0)
     fprintf(out, "_pub");
+}
+
+static void cetak_sisip_stack(FILE *out) {
+  const Target *t = get_target();
+  if (t->is_64)
+    fprintf(out, "    subq $8, %%rsp\n");
+}
+
+static void cetak_pilha_stack(FILE *out) {
+  const Target *t = get_target();
+  if (t->is_64)
+    fprintf(out, "    addq $8, %%rsp\n");
 }
 
 static int indeks_string = 0;
@@ -73,7 +91,8 @@ static void cetak_rodata(FILE *out, const InstruksiRA *daftar) {
   }
 }
 
-static void cetak_instruksi(FILE *out, const InstruksiRA *ins) {
+static void cetak_instruksi(FILE *out, const InstruksiRA *ins,
+                            const InstruksiRA *fungsi) {
   for (const InstruksiRA *cur = ins; cur; cur = cur->next) {
     if (cur->tipe == RA_FUNGSI) {
       if (!cur->badan) {
@@ -97,32 +116,81 @@ static void cetak_instruksi(FILE *out, const InstruksiRA *ins) {
         ada_panggil = b->tipe == RA_PANGGIL;
 
       if (ada_panggil)
-        fprintf(out, "    subq $8, %%rsp\n");
+        cetak_sisip_stack(out);
 
       if (cur->badan)
-        cetak_instruksi(out, cur->badan);
+        cetak_instruksi(out, cur->badan, cur);
 
       if (ada_panggil)
-        fprintf(out, "    addq $8, %%rsp\n");
+        cetak_pilha_stack(out);
 
       fprintf(out, "    ret\n");
     } else if (cur->tipe == RA_PANGGIL) {
       const Target *t = get_target();
-      for (int i = 0; i < cur->jumlah; i++) {
-        if (cur->tipe_nilai[i] == RA_UNTAIAN) {
-          char label[128];
-          label_string(label, sizeof(label), indeks_string++);
-          fprintf(out, "    lea %s(%%rip), %s\n", label, register_argumen(i));
-        } else if (i < t->banyak_reg) {
-          fprintf(out, "    mov $%s, %s\n", cur->nilai[i], register_argumen(i));
-        } else {
-          fprintf(out, "    ; arg %d lewat stack: %s\n", i, cur->nilai[i]);
+      if (!t->is_64) {
+        for (int i = cur->jumlah - 1; i >= 0; i--) {
+          if (cur->tipe_nilai[i] == RA_UNTAIAN) {
+            char label[128];
+            label_string(label, sizeof(label), indeks_string++);
+            fprintf(out, "    pushl $%s\n", label);
+          } else {
+            bool is_param = false;
+            if (fungsi) {
+              for (int k = 0; k < fungsi->jumlah; k++) {
+                if (strcmp(cur->nilai[i], fungsi->nilai[k]) == 0) {
+                  fprintf(out, "    movl %d(%%ebp), %%eax\n", 8 + k * 4);
+                  fprintf(out, "    pushl %%eax\n");
+                  is_param = true;
+                  break;
+                }
+              }
+            }
+            if (!is_param) {
+              fprintf(out, "    pushl $%s\n", cur->nilai[i]);
+            }
+          }
         }
-      }
 
-      fprintf(out, "    call ");
-      cetak_simbol(out, cur);
-      fprintf(out, "\n");
+        fprintf(out, "    call ");
+        cetak_simbol(out, cur);
+        fprintf(out, "\n");
+
+        if (cur->jumlah > 0) {
+          fprintf(out, "    addl $%d, %%esp\n", cur->jumlah * 4);
+        }
+      } else {
+        for (int i = 0; i < cur->jumlah; i++) {
+          if (cur->tipe_nilai[i] == RA_UNTAIAN) {
+            char label[128];
+            label_string(label, sizeof(label), indeks_string++);
+            fprintf(out, "    lea %s(%%rip), %s\n", label, register_argumen(i));
+          } else if (i < t->banyak_reg) {
+            bool is_param = false;
+            if (fungsi) {
+              for (int k = 0; k < fungsi->jumlah; k++) {
+                if (strcmp(cur->nilai[i], fungsi->nilai[k]) == 0) {
+                  const char *src = register_argumen(k);
+                  const char *dst = register_argumen(i);
+                  if (strcmp(src, dst) != 0)
+                    fprintf(out, "    mov %s, %s\n", src, dst);
+                  is_param = true;
+                  break;
+                }
+              }
+            }
+            if (!is_param) {
+              fprintf(out, "    mov $%s, %s\n", cur->nilai[i],
+                      register_argumen(i));
+            }
+          } else {
+            fprintf(out, "    ; arg %d lewat stack: %s\n", i, cur->nilai[i]);
+          }
+        }
+
+        fprintf(out, "    call ");
+        cetak_simbol(out, cur);
+        fprintf(out, "\n");
+      }
     }
   }
 }
@@ -157,10 +225,21 @@ void bangkitkan_brkt(const InstruksiRA *daftar, const char *output_file) {
     }
 
     FILE *out = NULL;
+    char *jalur_modul = NULL;
+
     if (output_file) {
-      out = fopen(output_file, "w");
+      if (strcmp(m, "<program>") == 0) {
+        jalur_modul = strdup(output_file);
+      } else {
+        size_t n = strlen(m) + 3;
+        jalur_modul = malloc(n);
+        snprintf(jalur_modul, n, "%s.s", m);
+      }
+
+      out = fopen(jalur_modul, "w");
       if (!out) {
-        fprintf(stderr, "BRKT: gagal membuka berkas output %s\n", output_file);
+        fprintf(stderr, "BRKT: gagal membuka berkas output %s\n", jalur_modul);
+        free(jalur_modul);
         return;
       }
     } else {
@@ -200,12 +279,13 @@ void bangkitkan_brkt(const InstruksiRA *daftar, const char *output_file) {
 
       InstruksiRA single = *cur;
       single.next = NULL;
-      cetak_instruksi(out, &single);
+      cetak_instruksi(out, &single, NULL);
     }
 
-    if (output_file && out) {
+    if (output_file) {
       fclose(out);
-      break;
+      free(jalur_modul);
+      continue;
     }
   }
 
