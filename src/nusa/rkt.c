@@ -1,7 +1,7 @@
 // Copyright 2026 Pengembang Bahasa Pemrograman Nusa
 // SPDX-License-Identifier: Apache-2.0
 
-#include "nusa/brkt.h"
+#include "nusa/rkt.h"
 #include "nusa/target.h"
 
 #include <stdio.h>
@@ -195,9 +195,9 @@ static void cetak_instruksi(FILE *out, const InstruksiRA *ins,
   }
 }
 
-void bangkitkan_brkt(const InstruksiRA *daftar, const char *output_file) {
+void bangkitkan_rkt(const InstruksiRA *daftar, const char *output_file) {
   if (!output_file) {
-    printf("\nBahasa Rakitan (BRKT):\n");
+    printf("\nBahasa Rakitan (RKT):\n");
     printf("; Target: %s %s\n", get_target()->so, get_target()->arsitektur);
   }
 
@@ -238,7 +238,7 @@ void bangkitkan_brkt(const InstruksiRA *daftar, const char *output_file) {
 
       out = fopen(jalur_modul, "w");
       if (!out) {
-        fprintf(stderr, "BRKT: gagal membuka berkas output %s\n", jalur_modul);
+        fprintf(stderr, "RKT: gagal membuka berkas output %s\n", jalur_modul);
         free(jalur_modul);
         return;
       }

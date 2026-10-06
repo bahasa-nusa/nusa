@@ -9,16 +9,16 @@
 typedef struct {
   bool versi;
   bool info;
-  const char *input_file;
-  bool tolek;
+  const char *berkas_masuk;
+  bool nolek;
   bool urai;
   bool smtk;
   bool ra;
   bool opt;
-  bool brkt;
+  bool rkt;
   const char *so;
   const char *arsitektur;
-  const char *output;
+  const char *berkas_keluar;
 } Arg;
 
 Arg urai_arg(int jum_arg, char **isi_arg);

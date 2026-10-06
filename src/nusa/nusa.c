@@ -7,7 +7,7 @@
 #include <string.h>
 
 #include "nusa/berkas.h"
-#include "nusa/brkt.h"
+#include "nusa/rkt.h"
 #include "nusa/optimasi.h"
 #include "nusa/pengurai.h"
 #include "nusa/penolek.h"
@@ -17,27 +17,23 @@
 #include "nusa/urai_arg.h"
 
 void cetak_info() {
-  printf("Penggunaan: nusa <argumen> [berkas]\n\n");
-  printf("Opsi:\n");
-  printf("-v, --versi                                            Untuk melihat "
-         "versi.\n");
-  printf("-i, --info                                             Untuk melihat "
-         "informasi penggunaan.\n");
-  printf("-tolek                                                 Analisis "
-         "token.\n");
-  printf("-urai                                                  Penguraian "
-         "pohon sintaksis abstrak (PSA).\n");
-  printf("-smtk                                                  Pemeriksaan "
-         "semantik.\n");
-  printf("-ra <sistem-operasi> <arsitektur>                      Representasi "
-         "Antara.\n");
-  printf("-opt <sistem-operasi> <arsitektur>                     Optimasi.\n");
-  printf("-brkt <sistem-operasi> <arsitektur> [-o <berkas>]      Bahasa "
-         "Rakitan.\n\n");
-  printf("Sistem Operasi Yang Tersedia:\n");
+  printf("Penggunaan: nusa <perintah> [berkas]\n\n");
+
+  printf("Perintah:\n");
+  printf("  versi                                                         Untuk melihat versi.\n");
+  printf("  info                                                          Untuk melihat informasi penggunaan.\n");
+  printf("  nolek <berkas>                                                Analisis tolek.\n");
+  printf("  urai <berkas>                                                 Penguraian pohon sintaksis abstrak (PSA).\n");
+  printf("  smtk <berkas>                                                 Pemeriksaan semantik.\n");
+  printf("  ra <sistem-operasi> <arsitektur> <berkas>                     Representasi antara.\n");
+  printf("  opt <sistem-operasi> <arsitektur> <berkas>                    Optimasi.\n");
+  printf("  rkt <sistem-operasi> <arsitektur> <berkas> [<berkas-keluar>]  Bahasa rakitan.\n\n");
+
+  printf("Sistem Operasi:\n");
   printf("  windows\n");
   printf("  linux\n\n");
-  printf("Arsitektur Yang Tersedia:\n");
+
+  printf("Arsitektur:\n");
   printf("  intel_64\n");
   printf("  intel_32\n");
 }
@@ -174,38 +170,38 @@ int main(int argc, char **argv) {
     return 0;
   }
 
-  if (arg.input_file) {
-    if (!arg.tolek && !arg.urai && !arg.smtk && !arg.ra && !arg.opt &&
-        !arg.brkt) {
+  if (arg.berkas_masuk) {
+    if (!arg.nolek && !arg.urai && !arg.smtk && !arg.ra && !arg.opt &&
+        !arg.rkt) {
       printf("Argumen tidak valid.\n");
       cetak_info();
       return 1;
     }
 
-    const char *isi_berkas = baca_berkas(arg.input_file);
+    const char *isi_berkas = baca_berkas(arg.berkas_masuk);
     if (!isi_berkas) {
-      printf("Gagal baca: %s\n", arg.input_file);
+      printf("Gagal baca: %s\n", arg.berkas_masuk);
       return 1;
     }
 
-    // Tolek
-    if (arg.tolek) {
-      printf("Tolek:\n");
+    // Nolek
+    if (arg.nolek) {
+      printf("Nolek:\n");
       bersihkan_daftar_dimuat();
-      tandai_berkas_dimuat(arg.input_file);
-      kumpul_tolek(isi_berkas, arg.input_file, true);
+      tandai_berkas_dimuat(arg.berkas_masuk);
+      kumpul_tolek(isi_berkas, arg.berkas_masuk, true);
       cetak_tolek_terkumpul();
     }
 
     // PSA (Urai)
-    if (arg.urai || arg.smtk || arg.ra || arg.opt || arg.brkt) {
+    if (arg.urai || arg.smtk || arg.ra || arg.opt || arg.rkt) {
       if (arg.urai) {
         printf("PSA:\n");
       }
       bersihkan_daftar_dimuat();
-      tandai_berkas_dimuat(arg.input_file);
+      tandai_berkas_dimuat(arg.berkas_masuk);
 
-      PSA *psa = urai(isi_berkas, arg.input_file);
+      PSA *psa = urai(isi_berkas, arg.berkas_masuk);
       if (psa) {
         if (arg.urai) {
           cetak_psa(psa, 0);
@@ -216,9 +212,9 @@ int main(int argc, char **argv) {
           if (!galat)
             printf("Tidak ada kesalahan\n");
         }
-        if (arg.ra || arg.opt || arg.brkt) {
+        if (arg.ra || arg.opt || arg.rkt) {
           if (!arg.so || !arg.arsitektur) {
-            printf("-ra, -opt, atau -brkt memerlukan <sistem-operasi> dan "
+            printf("Perintah ra, opt, atau rkt memerlukan <sistem-operasi> dan "
                    "<arsitektur>\n");
             return 1;
           }
@@ -240,15 +236,15 @@ int main(int argc, char **argv) {
             printf("\nRA:\n");
             cetak_ra_permodul(ra_imp);
           }
-          if (arg.opt || arg.brkt) {
+          if (arg.opt || arg.rkt) {
             InstruksiRA *ra_opt = optimalkan(ra);
             InstruksiRA *ra_opt_imp = tambah_impor_ra(ra_opt, ra_opt);
             if (arg.opt) {
               printf("\nOptimasi:\n");
               cetak_ra_permodul(ra_opt_imp);
             }
-            if (arg.brkt) {
-              bangkitkan_brkt(ra_opt_imp, arg.output);
+            if (arg.rkt) {
+              bangkitkan_rkt(ra_opt_imp, arg.berkas_keluar);
             }
             bersihkan_ra(ra_imp);
             bersihkan_ra(ra_opt_imp);

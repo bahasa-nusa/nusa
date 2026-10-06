@@ -55,42 +55,41 @@ Yang terinstall:
 ## Cara Pakai
 
 ```sh
-$ nusa -i
-Penggunaan: nusa <argumen> [berkas]
+$ nusa info
+Penggunaan: nusa <perintah> [berkas]
 
-Opsi:
--v, --versi                                            Untuk melihat versi.
--i, --info                                             Untuk melihat informasi penggunaan.
--tolek                                                 Analisis token.
--urai                                                  Penguraian pohon sintaksis abstrak (PSA).
--smtk                                                  Pemeriksaan semantik.
--ra <sistem-operasi> <arsitektur>                      Representasi Antara.
--opt <sistem-operasi> <arsitektur>                     Optimasi.
--brkt <sistem-operasi> <arsitektur> [-o <berkas>]      Bahasa Rakitan.
+Perintah:
+  versi                                                         Untuk melihat versi.
+  info                                                          Untuk melihat informasi penggunaan.
+  nolek <berkas>                                                Analisis tolek.
+  urai <berkas>                                                 Penguraian pohon sintaksis abstrak (PSA).
+  smtk <berkas>                                                 Pemeriksaan semantik.
+  ra <sistem-operasi> <arsitektur> <berkas>                     Representasi antara.
+  opt <sistem-operasi> <arsitektur> <berkas>                    Optimasi.
+  rkt <sistem-operasi> <arsitektur> <berkas> [<berkas-keluar>]  Bahasa rakitan.
 
-Sistem Operasi Yang Tersedia:
+Sistem Operasi:
   windows
   linux
 
-Arsitektur Yang Tersedia:
+Arsitektur:
   intel_64
   intel_32
-```
 
-Flag bisa digabung, contoh `-tolek -urai` mencetak keduanya. `-o <berkas>` hanya berlaku untuk `-brkt`; tanpa `-o`, rakitan dicetak ke konsol.
+```
 
 Contoh keluaran:
 
 ```text
-$ ./build/nusa -tolek halodunia.ns
-Tolek:
+$ nusa nolek halodunia.ns
+Nolek:
 Berkas 1: halodunia.ns (titik masuk)
 ...
 ```
 
 ```text
-$ ./build/nusa -brkt windows intel_64 halodunia.ns
-Bahasa Rakitan (BRKT):
+$ nusa rkt windows intel_64 halodunia.ns
+Bahasa Rakitan (RKT):
 ...
 ```
 

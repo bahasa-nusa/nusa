@@ -3,21 +3,30 @@
 
 #include "nusa/berkas.h"
 
+#include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #ifdef _WIN32
+#include <direct.h>
 #include <io.h>
 #include <windows.h>
 
 #define F_OK 0
 #define access _access
+#define mkdir _mkdir
 #else
 #include <libgen.h>
 #include <limits.h>
 #include <unistd.h>
 
+#endif
+
+#ifndef PATH_MAX
+#define PATH_MAX 4096
 #endif
 
 typedef struct EntriDimuat {

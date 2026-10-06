@@ -1,7 +1,7 @@
 #!/bin/sh
 ./build.sh
 
-./build/nusa.exe -brkt windows intel_32 kode/halodunia.ns -o halodunia.s
+./build/nusa.exe rkt windows intel_32 kode/halodunia.ns halodunia.s
 
 ./so/windows/intel_32/as.exe -c halodunia.s -o halodunia.o
 

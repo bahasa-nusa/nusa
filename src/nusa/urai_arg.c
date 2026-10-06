@@ -7,38 +7,40 @@
 Arg urai_arg(int argc, char **argv) {
   Arg args = {0};
   for (int i = 1; i < argc; i++) {
-    if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--versi") == 0) {
+    if (strcmp(argv[i], "versi") == 0) {
       args.versi = true;
-    } else if (strcmp(argv[i], "-i") == 0 || strcmp(argv[i], "--info") == 0) {
+    } else if (strcmp(argv[i], "info") == 0) {
       args.info = true;
-    } else if (strcmp(argv[i], "-tolek") == 0) {
-      args.tolek = true;
-    } else if (strcmp(argv[i], "-urai") == 0) {
+    } else if (strcmp(argv[i], "nolek") == 0) {
+      args.nolek = true;
+    } else if (strcmp(argv[i], "urai") == 0) {
       args.urai = true;
-    } else if (strcmp(argv[i], "-smtk") == 0) {
+    } else if (strcmp(argv[i], "smtk") == 0) {
       args.smtk = true;
-    } else if (strcmp(argv[i], "-ra") == 0) {
+    } else if (strcmp(argv[i], "ra") == 0) {
       args.ra = true;
       if (i + 2 < argc) {
         args.so = argv[++i];
         args.arsitektur = argv[++i];
       }
-    } else if (strcmp(argv[i], "-opt") == 0) {
+    } else if (strcmp(argv[i], "opt") == 0) {
       args.opt = true;
       if (i + 2 < argc) {
         args.so = argv[++i];
         args.arsitektur = argv[++i];
       }
-    } else if (strcmp(argv[i], "-brkt") == 0) {
-      args.brkt = true;
+    } else if (strcmp(argv[i], "rkt") == 0) {
+      args.rkt = true;
       if (i + 2 < argc) {
         args.so = argv[++i];
         args.arsitektur = argv[++i];
       }
-    } else if (strcmp(argv[i], "-o") == 0 && i + 1 < argc) {
-      args.output = argv[++i];
     } else if (argv[i][0] != '-') {
-      args.input_file = argv[i];
+      if (args.rkt && args.berkas_masuk && !args.berkas_keluar) {
+        args.berkas_keluar = argv[i];
+      } else {
+        args.berkas_masuk = argv[i];
+      }
     }
   }
   return args;
