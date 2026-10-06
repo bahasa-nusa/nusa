@@ -33,3 +33,43 @@ add_executable(
 )
 
 target_include_directories(nusa PRIVATE include)
+
+# install
+install(
+    TARGETS nusa
+    DESTINATION "."
+)
+
+install(
+    DIRECTORY "kode/pustaka/"
+    DESTINATION "kode/pustaka"
+)
+
+file(GLOB SO_WINDOWS_INTEL_32_PUSTAKA_FILES "so/windows/intel_32/pustaka/*.a")
+install(
+    FILES ${SO_WINDOWS_INTEL_32_PUSTAKA_FILES}
+    DESTINATION "so/windows/intel_32/pustaka"
+)
+
+file(GLOB SO_WINDOWS_INTEL_64_PUSTAKA_FILES "so/windows/intel_64/pustaka/*.a")
+install(
+    FILES ${SO_WINDOWS_INTEL_64_PUSTAKA_FILES}
+    DESTINATION "so/windows/intel_64/pustaka"
+)
+
+file(GLOB SO_WINDOWS_INTEL_32_FILES "so/windows/intel_32/*.exe" "so/windows/intel_32/*.dll")
+install(
+    FILES ${SO_WINDOWS_INTEL_32_FILES}
+    DESTINATION "so/windows/intel_32"
+)
+
+file(GLOB SO_WINDOWS_INTEL_64_FILES "so/windows/intel_64/*.exe" "so/windows/intel_64/*.dll")
+install(
+    FILES ${SO_WINDOWS_INTEL_64_FILES}
+    DESTINATION "so/windows/intel_64"
+)
+
+install(
+    FILES "LICENSE"
+    DESTINATION "."
+)

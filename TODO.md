@@ -2,20 +2,6 @@
 
 > Tugas disini masih dapat berubah.
 
-## Membuat nusa dapat di install dengan cmake.
-
-Struktur folder install nya seperti ini:
-``` bash
-so/windows/intel_32/pustaka/*.a
-so/windows/intel_64/pustaka/*.a
-so/windows/intel_32/program/*.exe
-so/windows/intel_64/program/*.exe
-kode/pustaka/standar/*.ns
-kode/pustaka/*.ns
-program/nusa.exe
-LICENSE
-```
-
 ## Perintah terminal untuk membuat project
 
 Perintah nya seperti ini:

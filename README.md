@@ -32,18 +32,51 @@ Terdapat 3 skrip yang tersedia di direktori utama:
    - **Cara jalankan:** `./tes_halodunia_windows_intel_32.sh` atau `./tes_halodunia_windows_intel_64.sh`
    - **Output:** Eksekusi program contoh `halodunia.exe` yang langsung dijalankan otomatis setelah proses build selesai.
 
-## Cara Pakai
+## Cara Install
 
-Setelah build, biner ada di `build/nusa` (atau `build/nusa.exe` di Windows).
+Setelah build berhasil, install ke direktori tujuan dengan `cmake --install`:
 
 ```sh
-./build/nusa -tolek halodunia.ns
-./build/nusa -urai halodunia.ns
-./build/nusa -smtk halodunia.ns
-./build/nusa -ra windows intel_64 halodunia.ns
-./build/nusa -opt windows intel_64 halodunia.ns
-./build/nusa -brkt windows intel_64 halodunia.ns
-./build/nusa -brkt windows intel_64 halodunia.ns -o halodunia.s
+cmake --install build --prefix <direktori_tujuan>
+```
+
+Contoh (install ke `C:/nusa`):
+
+```sh
+cmake --install build --prefix C:/nusa
+```
+
+Yang terinstall:
+- Biner kompilator
+- Kode pustaka bawaan Nusa
+- Alat dan pustaka yang dibutuhkan sistem operasi tertentu
+- LICENSE
+
+Tanpa `--prefix`, file diinstall ke direktori build.
+
+## Cara Pakai
+
+```sh
+$ nusa -i
+Penggunaan: nusa <argumen> [berkas]
+
+Opsi:
+-v, --versi                                            Untuk melihat versi.
+-i, --info                                             Untuk melihat informasi penggunaan.
+-tolek                                                 Analisis token.
+-urai                                                  Penguraian pohon sintaksis abstrak (PSA).
+-smtk                                                  Pemeriksaan semantik.
+-ra <sistem-operasi> <arsitektur>                      Representasi Antara.
+-opt <sistem-operasi> <arsitektur>                     Optimasi.
+-brkt <sistem-operasi> <arsitektur> [-o <berkas>]      Bahasa Rakitan.
+
+Sistem Operasi Yang Tersedia:
+  windows
+  linux
+
+Arsitektur Yang Tersedia:
+  intel_64
+  intel_32
 ```
 
 Flag bisa digabung, contoh `-tolek -urai` mencetak keduanya. `-o <berkas>` hanya berlaku untuk `-brkt`; tanpa `-o`, rakitan dicetak ke konsol.
