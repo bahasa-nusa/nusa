@@ -177,7 +177,7 @@ static PSA *urai_berkas(const char *isi, const char *jalur, bool titik_masuk) {
             strncpy(nama, tolek.teks + 1, path_len);
             nama[path_len] = '\0';
 
-            char *res = gabung_jalur_relatif(jalur, nama);
+            char *res = cari_berkas(nama);
             free(nama);
 
             if (res && !berkas_sudah_dimuat(res)) {

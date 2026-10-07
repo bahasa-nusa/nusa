@@ -2,31 +2,6 @@
 
 > Tugas disini masih dapat berubah.
 
-## Penyesuaian muat berkas (A1)
-
-Buat agar saat muat berkas itu root nya tidak hanya dari berkas titik awal atau berkas utama yang di masukkan, tapi juga dari lokasi biner nusa di simpan (bukan lokasi nusa di eksekusi)/kode/...
-
-Anggap saja ini direktori instalasi nusa
-```
-kode/standar/cetak.ns
-kode/standar/keluar.ns
-kode/standar.ns
-nusa.exe
-```
-
-Anggap saja ini direktori proyek
-```
-bantu.ns
-utama.ns
-```
-
-``` utama.ns
-'standar.ns'
-'bantu.ns'
-
-cetak('tes')
-```
-
 ## Ganti konsep muat berkas (A2)
 
 Ubah sintaks muat berkas jadi seperti ini.

@@ -1,0 +1,12 @@
+# Copyright 2026 Pengembang Bahasa Pemrograman Nusa
+# SPDX-License-Identifier: Apache-2.0
+
+# Ini adalah komentar
+
+'standar.ns' # Muat berkas pustaka standar
+'cetak_tergantung_os_dan_arsitektur.ns'
+
+cetak('Halo Aerell!\n')
+
+# Panggil fungsi untuk keluar
+keluar(0)

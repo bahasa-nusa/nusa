@@ -86,7 +86,7 @@ static void kumpul_tolek(const char *isi, const char *jalur, bool titik_masuk) {
             strncpy(nama, tolek.teks + 1, path_len);
             nama[path_len] = '\0';
 
-            char *res = gabung_jalur_relatif(jalur, nama);
+            char *res = cari_berkas(nama);
             free(nama);
 
             if (res && !berkas_sudah_dimuat(res)) {
@@ -177,6 +177,12 @@ int main(int argc, char **argv) {
       cetak_info();
       return 1;
     }
+
+    direktori_berkas_utama = direktori_dari(arg.berkas_masuk);
+
+    char *biner = jalur_biner();
+    direktori_instalasi = direktori_dari(biner ? biner : argv[0]);
+    free(biner);
 
     const char *isi_berkas = baca_berkas(arg.berkas_masuk);
     if (!isi_berkas) {

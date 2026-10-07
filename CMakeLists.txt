@@ -41,8 +41,8 @@ install(
 )
 
 install(
-    DIRECTORY "kode/pustaka/"
-    DESTINATION "kode/pustaka"
+    DIRECTORY "kode/"
+    DESTINATION "kode"
 )
 
 file(GLOB SO_WINDOWS_INTEL_32_PUSTAKA_FILES "so/windows/intel_32/pustaka/*.a")

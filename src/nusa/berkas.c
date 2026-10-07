@@ -36,6 +36,10 @@ typedef struct EntriDimuat {
 
 static EntriDimuat *daftar_dimuat = NULL;
 
+/* Dua akar pencarian muat berkas */
+char *direktori_berkas_utama = NULL;
+char *direktori_instalasi = NULL;
+
 static char *salin_string(const char *s) {
   if (!s)
     return NULL;
@@ -84,6 +88,109 @@ char *jalur_kanonis(const char *jalur) {
 
   return salin_string(jalur);
 #endif
+}
+
+char *direktori_dari(const char *jalur) {
+  if (!jalur)
+    return NULL;
+
+  char *k = jalur_kanonis(jalur);
+  if (!k)
+    return NULL;
+
+  char *slash = strrchr(k, '/');
+  if (!slash) {
+    free(k);
+    return NULL;
+  }
+
+  if (slash == k) {
+    slash[1] = '\0';
+    return k;
+  }
+
+  *slash = '\0';
+  return k;
+}
+
+char *jalur_biner(void) {
+#ifdef _WIN32
+  char buf[MAX_PATH];
+
+  DWORD n = GetModuleFileNameA(NULL, buf, MAX_PATH);
+  if (n == 0 || n >= MAX_PATH)
+    return NULL;
+
+  return salin_string(buf);
+#else
+  char buf[PATH_MAX];
+
+  ssize_t n = readlink("/proc/self/exe", buf, PATH_MAX - 1);
+  if (n <= 0)
+    return NULL;
+
+  buf[n] = '\0';
+  return salin_string(buf);
+#endif
+}
+
+static bool berkas_ada(const char *jalur) {
+  struct stat st;
+  return jalur && stat(jalur, &st) == 0 && S_ISREG(st.st_mode);
+}
+
+static char *gabung_akar(const char *akar, const char *nama) {
+  if (!akar || !nama)
+    return NULL;
+
+  size_t la = strlen(akar);
+  size_t ln = strlen(nama);
+  bool perlu_pemisah = la > 0 && akar[la - 1] != '/' && akar[la - 1] != '\\';
+  size_t total = la + (perlu_pemisah ? 1 : 0) + ln + 1;
+
+  char *r = malloc(total);
+  if (!r)
+    return NULL;
+
+  snprintf(r, total, perlu_pemisah ? "%s/%s" : "%s%s", akar, nama);
+  return r;
+}
+
+char *cari_berkas(const char *nama) {
+  if (!nama || nama[0] == '\0')
+    return NULL;
+
+#ifdef _WIN32
+  bool absolut = nama[1] == ':' || nama[0] == '/' || nama[0] == '\\';
+#else
+  bool absolut = nama[0] == '/';
+#endif
+  if (absolut)
+    return berkas_ada(nama) ? jalur_kanonis(nama) : NULL;
+
+  char *kandidat = gabung_akar(direktori_berkas_utama, nama);
+  if (kandidat) {
+    if (berkas_ada(kandidat)) {
+      char *k = jalur_kanonis(kandidat);
+      free(kandidat);
+      return k;
+    }
+    free(kandidat);
+  }
+
+  char *akar_kode = gabung_akar(direktori_instalasi, "kode");
+  kandidat = gabung_akar(akar_kode, nama);
+  free(akar_kode);
+  if (kandidat) {
+    if (berkas_ada(kandidat)) {
+      char *k = jalur_kanonis(kandidat);
+      free(kandidat);
+      return k;
+    }
+    free(kandidat);
+  }
+
+  return NULL;
 }
 
 const char *baca_berkas(const char *nama_berkas) {
