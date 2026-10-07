@@ -129,7 +129,9 @@ void cetak_psa(const PSA *node, int indent) {
                                     "SO WINDOWS",
                                     "SO LINUX",
                                     "ARSITEKTUR INTEL 32",
-                                    "ARSITEKTUR INTEL 64"};
+                                    "ARSITEKTUR INTEL 64",
+                                    "MUAT",
+                                    "TITIK"};
   printf("[%s] %.*s\n", nama_tipe[node->tipe], node->panjang, node->teks);
 
   for (int i = 0; i < node->jumlah_anak; i++) {
@@ -150,6 +152,90 @@ static bool deklarasi_menunggu(const char *ptr) {
   return false;
 }
 
+static const char *urai_argumen(const char *ptr, PSA *node) {
+  Tolek lanjut;
+  while ((ptr = penolek(ptr, &lanjut)) &&
+         lanjut.tipe != TIPE_TOLEK_KURUNG_BULAT_TUTUP &&
+         lanjut.tipe != TIPE_TOLEK_AKHIR) {
+    if (lanjut.tipe == TIPE_TOLEK_PENGENAL) {
+      tambah_anak(node, buat_node(PSA_PENGENAL, lanjut.teks, lanjut.panjang));
+    } else if (lanjut.tipe == TIPE_TOLEK_NILAI_UNTAIAN) {
+      tambah_anak(node, buat_node(PSA_NILAI_UNTAIAN, lanjut.teks, lanjut.panjang));
+    } else if (lanjut.tipe == TIPE_TOLEK_NILAI_BILANGAN) {
+      tambah_anak(node, buat_node(PSA_NILAI_BILANGAN, lanjut.teks, lanjut.panjang));
+    } else if (lanjut.tipe == TIPE_TOLEK_TIPE_DATA_UNTAIAN) {
+      tambah_anak(node, buat_node(PSA_TIPE_DATA_UNTAIAN, lanjut.teks, lanjut.panjang));
+    } else if (lanjut.tipe == TIPE_TOLEK_TIPE_DATA_BILANGAN) {
+      tambah_anak(node, buat_node(PSA_TIPE_DATA_BILANGAN, lanjut.teks, lanjut.panjang));
+    } else if (lanjut.tipe == TIPE_TOLEK_KATA_KUNCI_EKSTERNAL) {
+      tambah_anak(node, buat_node(PSA_KATA_KUNCI, lanjut.teks, lanjut.panjang));
+    } else if (lanjut.tipe == TIPE_TOLEK_KATA_KUNCI_PUBLIK) {
+      tambah_anak(node, buat_node(PSA_KATA_KUNCI_PUBLIK, lanjut.teks, lanjut.panjang));
+    }
+  }
+  return ptr;
+}
+
+static PSA *urai_berkas(const char *isi, const char *jalur, bool titik_masuk);
+
+static void muat_siswa(PSA *akar, PSA *node_muat, const char *teks_jalur,
+                       int panjang) {
+  if (panjang < 2 || teks_jalur[0] != '\'' ||
+      teks_jalur[panjang - 1] != '\'')
+    return;
+
+  int pjg_jalur = panjang - 2;
+  if (pjg_jalur <= 0)
+    return;
+
+  char *nama = malloc((size_t)pjg_jalur + 1);
+  if (!nama)
+    return;
+  strncpy(nama, teks_jalur + 1, pjg_jalur);
+  nama[pjg_jalur] = '\0';
+
+  char *res = cari_berkas(nama);
+  free(nama);
+  if (!res)
+    return;
+
+  node_muat->jalur = salin(res);
+
+  if (berkas_sudah_dimuat(res)) {
+    free(res);
+    return;
+  }
+
+  tandai_berkas_dimuat(res);
+
+  const char *sub_isi = baca_berkas(res);
+  if (sub_isi) {
+    int sebelum = akar->jumlah_anak;
+    PSA *sub = urai_berkas(sub_isi, res, false);
+
+    for (int i = 0; i < sub->jumlah_anak - 1; i++) {
+      tambah_anak(akar, sub->anak[i]);
+      sub->anak[i] = NULL;
+    }
+
+    PSA *self = sub->anak[sub->jumlah_anak - 1];
+    sub->anak[sub->jumlah_anak - 1] = NULL;
+    free(sub->anak);
+    free(sub);
+    tambah_anak(akar, self);
+    bersihkan_berkas(sub_isi);
+
+    int sesudah = akar->jumlah_anak;
+    for (int i = sebelum; i < sesudah; i++) {
+      PSA *b = akar->anak[i];
+      if (b->tipe == PSA_BERKAS && b->modul)
+        tambah_anak(node_muat, buat_node(PSA_PENGENAL, b->modul, (int)strlen(b->modul)));
+    }
+  }
+
+  free(res);
+}
+
 static PSA *urai_berkas(const char *isi, const char *jalur, bool titik_masuk) {
   PSA *akar = buat_node(PSA_PROGRAM, "program", 7);
   PSA *modul = buat_node(PSA_BERKAS, NULL, 0);
@@ -161,60 +247,76 @@ static PSA *urai_berkas(const char *isi, const char *jalur, bool titik_masuk) {
 
   Tolek tolek;
   const char *ptr = isi;
-  bool di_atas = true;
 
   while ((ptr = penolek(ptr, &tolek)) && tolek.tipe != TIPE_TOLEK_AKHIR) {
     if (tolek.tipe == TIPE_TOLEK_KOMENTAR)
       continue;
 
-    if (tolek.tipe == TIPE_TOLEK_NILAI_UNTAIAN && di_atas) {
-      int len = tolek.panjang;
-      if (len >= 2 && tolek.teks[0] == '\'' && tolek.teks[len - 1] == '\'') {
-        int path_len = len - 2;
-        if (path_len > 0) {
-          char *nama = malloc(path_len + 1);
-          if (nama) {
-            strncpy(nama, tolek.teks + 1, path_len);
-            nama[path_len] = '\0';
-
-            char *res = cari_berkas(nama);
-            free(nama);
-
-            if (res && !berkas_sudah_dimuat(res)) {
-              tandai_berkas_dimuat(res);
-
-              const char *sub_isi = baca_berkas(res);
-              if (sub_isi) {
-                PSA *sub = urai_berkas(sub_isi, res, false);
-
-                for (int i = 0; i < sub->jumlah_anak - 1; i++) {
-                  tambah_anak(akar, sub->anak[i]);
-                  sub->anak[i] = NULL;
-                }
-
-                PSA *self = sub->anak[sub->jumlah_anak - 1];
-
-                sub->anak[sub->jumlah_anak - 1] = NULL;
-                free(sub->anak);
-                free(sub);
-                tambah_anak(akar, self);
-                bersihkan_berkas(sub_isi);
-              }
-            }
-
-            free(res);
-          }
-        }
-      }
-
-      continue;
-    }
-
-    di_atas = false;
-
     if (tolek.tipe == TIPE_TOLEK_PENGENAL) {
       Tolek lanjut;
       const char *ptr_lanjut = penolek(ptr, &lanjut);
+
+      if (lanjut.tipe == TIPE_TOLEK_TIPE_DATA_MUAT) {
+        Tolek t_setara;
+        const char *ptr_setara = penolek(ptr_lanjut, &t_setara);
+
+        Tolek t_jalur = {0};
+        const char *ptr_jalur = NULL;
+        if (t_setara.tipe == TIPE_TOLEK_OPERASI_ISI)
+          ptr_jalur = penolek(ptr_setara, &t_jalur);
+
+        if (t_setara.tipe == TIPE_TOLEK_OPERASI_ISI &&
+            t_jalur.tipe == TIPE_TOLEK_NILAI_UNTAIAN) {
+          PSA *node = buat_node(PSA_MUAT, tolek.teks, tolek.panjang);
+          node->modul = salin(modul->modul);
+          tambah_anak(node, buat_node(PSA_NILAI_UNTAIAN, t_jalur.teks,
+                                      t_jalur.panjang));
+          muat_siswa(akar, node, t_jalur.teks, t_jalur.panjang);
+          tambah_anak(modul, node);
+          ptr = ptr_jalur;
+        } else {
+          printf(
+            "Kesalahan: sintaks muat '%.*s muat = \'nama_berkas.ns\' (di %s)\n",
+            tolek.panjang, tolek.teks,
+            modul->jalur ? modul->jalur : "?"
+          );
+          ptr = ptr_jalur ? ptr_jalur : ptr_setara;
+        }
+        last_decl = NULL;
+        continue;
+      }
+
+      if (lanjut.tipe == TIPE_TOLEK_TITIK) {
+        Tolek sesudah;
+        const char *ptr_sesudah = penolek(ptr_lanjut, &sesudah);
+        if (sesudah.tipe == TIPE_TOLEK_PENGENAL) {
+          Tolek buka;
+          const char *ptr_buka = penolek(ptr_sesudah, &buka);
+          if (buka.tipe == TIPE_TOLEK_KURUNG_BULAT_BUKA) {
+            size_t pjg = (size_t)tolek.panjang + 1 + (size_t)sesudah.panjang;
+            char *nama = malloc(pjg + 1);
+            memcpy(nama, tolek.teks, tolek.panjang);
+            nama[tolek.panjang] = '.';
+            memcpy(nama + tolek.panjang + 1, sesudah.teks, sesudah.panjang);
+            nama[pjg] = '\0';
+
+            PSA *node = buat_node(PSA_PANGGILAN, nama, (int)pjg);
+            node->modul = salin(modul->modul);
+            free(nama);
+            tambah_anak(modul, node);
+            ptr = urai_argumen(ptr_buka, node);
+            last_decl = NULL;
+            continue;
+          }
+          printf(
+            "Kesalahan: bertitik hanya didukung dalam panggilan, '%.*s.%.*s' (di %s)\n",
+            tolek.panjang, tolek.teks, sesudah.panjang, sesudah.teks,
+            modul->jalur ? modul->jalur : "?"
+          );
+          ptr = ptr_sesudah;
+          continue;
+        }
+      }
 
       if (lanjut.tipe == TIPE_TOLEK_KURUNG_BULAT_BUKA) {
         ptr = ptr_lanjut;
@@ -302,36 +404,8 @@ static PSA *urai_berkas(const char *isi, const char *jalur, bool titik_masuk) {
         } else {
           PSA *node = buat_node(PSA_PANGGILAN, tolek.teks, tolek.panjang);
           node->modul = salin(modul->modul);
-          ptr = ptr_lanjut;
-
-          while ((ptr = penolek(ptr, &lanjut)) &&
-                 lanjut.tipe != TIPE_TOLEK_KURUNG_BULAT_TUTUP &&
-                 lanjut.tipe != TIPE_TOLEK_AKHIR) {
-            if (lanjut.tipe == TIPE_TOLEK_PENGENAL) {
-              tambah_anak(node,
-                          buat_node(PSA_PENGENAL, lanjut.teks, lanjut.panjang));
-            } else if (lanjut.tipe == TIPE_TOLEK_NILAI_UNTAIAN) {
-              tambah_anak(node, buat_node(PSA_NILAI_UNTAIAN, lanjut.teks,
-                                          lanjut.panjang));
-            } else if (lanjut.tipe == TIPE_TOLEK_NILAI_BILANGAN) {
-              tambah_anak(node, buat_node(PSA_NILAI_BILANGAN, lanjut.teks,
-                                          lanjut.panjang));
-            } else if (lanjut.tipe == TIPE_TOLEK_TIPE_DATA_UNTAIAN) {
-              tambah_anak(node, buat_node(PSA_TIPE_DATA_UNTAIAN, lanjut.teks,
-                                          lanjut.panjang));
-            } else if (lanjut.tipe == TIPE_TOLEK_TIPE_DATA_BILANGAN) {
-              tambah_anak(node, buat_node(PSA_TIPE_DATA_BILANGAN, lanjut.teks,
-                                          lanjut.panjang));
-            } else if (lanjut.tipe == TIPE_TOLEK_KATA_KUNCI_EKSTERNAL) {
-              tambah_anak(
-                  node, buat_node(PSA_KATA_KUNCI, lanjut.teks, lanjut.panjang));
-            } else if (lanjut.tipe == TIPE_TOLEK_KATA_KUNCI_PUBLIK) {
-              tambah_anak(node, buat_node(PSA_KATA_KUNCI_PUBLIK, lanjut.teks,
-                                          lanjut.panjang));
-            }
-          }
-
           tambah_anak(modul, node);
+          ptr = urai_argumen(ptr_lanjut, node);
           last_decl = NULL;
         }
       } else {

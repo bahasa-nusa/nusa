@@ -132,6 +132,43 @@ typedef struct {
 static Simbol *tabel_simbol;
 static int jumlah_simbol;
 
+typedef struct {
+  char *var;
+  char *modul;
+} ModulMuat;
+static ModulMuat *modul_muat;
+static int jumlah_modul_muat;
+
+static void kumpul_modul_muat(const PSA *akar) {
+  for (int i = 0; i < akar->jumlah_anak; i++) {
+    const PSA *berkas = akar->anak[i];
+    if (berkas->tipe != PSA_BERKAS)
+      continue;
+    for (int j = 0; j < berkas->jumlah_anak; j++) {
+      const PSA *muat = berkas->anak[j];
+      if (muat->tipe != PSA_MUAT)
+        continue;
+      for (int k = 1; k < muat->jumlah_anak; k++) {
+        if (muat->anak[k]->tipe != PSA_PENGENAL)
+          continue;
+        jumlah_modul_muat++;
+        modul_muat = realloc(modul_muat, sizeof(ModulMuat) * jumlah_modul_muat);
+        modul_muat[jumlah_modul_muat - 1].var =
+            salin(muat->teks, (int)strlen(muat->teks));
+        modul_muat[jumlah_modul_muat - 1].modul =
+            salin(muat->anak[k]->teks, (int)strlen(muat->anak[k]->teks));
+      }
+    }
+  }
+}
+
+static const char *modul_dari_var(const char *var) {
+  for (int i = 0; i < jumlah_modul_muat; i++)
+    if (strcmp(modul_muat[i].var, var) == 0)
+      return modul_muat[i].modul;
+  return NULL;
+}
+
 InstruksiRA *tambah_impor_ra(InstruksiRA *daftar, const InstruksiRA *sumber);
 
 static void kumpulkan_simbol(const InstruksiRA *daftar) {
@@ -147,26 +184,33 @@ static void kumpulkan_simbol(const InstruksiRA *daftar) {
   }
 }
 
-static const InstruksiRA *cari_simbol(const InstruksiRA *panggil) {
-  const InstruksiRA *cocok_modul = NULL;
-  const InstruksiRA *cocok_publik = NULL;
+static bool modul_sama_ins(const InstruksiRA *ins, const char *m) {
+  if (!ins->modul && !m)
+    return true;
+  if (!ins->modul || !m)
+    return false;
+  return strcmp(ins->modul, m) == 0;
+}
 
+static const InstruksiRA *cari_simbol(const InstruksiRA *panggil) {
   for (int i = 0; i < jumlah_simbol; i++) {
     const InstruksiRA *d = tabel_simbol[i].deklarasi;
     if (strcmp(d->nama, panggil->nama) != 0)
       continue;
 
-    if (panggil->modul && tabel_simbol[i].modul &&
-        strcmp(panggil->modul, tabel_simbol[i].modul) == 0) {
-      cocok_modul = d;
-      break;
-    }
+    if (modul_sama_ins(panggil, tabel_simbol[i].modul))
+      return d;
 
-    if (tabel_simbol[i].publik && !cocok_publik)
-      cocok_publik = d;
+    for (int m = 0; m < jumlah_modul_muat; m++) {
+      if (strcmp(modul_muat[m].var, "_") == 0 &&
+          tabel_simbol[i].modul &&
+          strcmp(modul_muat[m].modul, tabel_simbol[i].modul) == 0 &&
+          tabel_simbol[i].publik)
+        return d;
+    }
   }
 
-  return cocok_modul ? cocok_modul : cocok_publik;
+  return NULL;
 }
 
 static void ganti_nama(InstruksiRA *ins, const char *nama_baru) {
@@ -183,6 +227,20 @@ static void mangle(const InstruksiRA *daftar) {
   for (InstruksiRA *cur = (InstruksiRA *)daftar; cur; cur = cur->next) {
     if (cur->eks)
       continue;
+
+    const char *dot = strchr(cur->nama, '.');
+    if (dot) {
+      size_t len_var = (size_t)(dot - cur->nama);
+      char *var = malloc(len_var + 1);
+      memcpy(var, cur->nama, len_var);
+      var[len_var] = '\0';
+      const char *asli = modul_dari_var(var);
+      free(var);
+      free(cur->nama);
+      cur->nama = salin(dot + 1, (int)strlen(dot + 1));
+      free(cur->modul);
+      cur->modul = asli ? salin_modul(asli) : NULL;
+    }
 
     if (cur->tipe == RA_FUNGSI) {
       if (!cur->modul)
@@ -376,12 +434,21 @@ InstruksiRA *bangkitkan_ra(const PSA *akar, const char *so,
     dorong(&kepala, &ekor, utama);
   }
 
+  kumpul_modul_muat(akar);
   kumpulkan_simbol(kepala);
   mangle(kepala);
 
   free(tabel_simbol);
   tabel_simbol = NULL;
   jumlah_simbol = 0;
+
+  for (int i = 0; i < jumlah_modul_muat; i++) {
+    free(modul_muat[i].var);
+    free(modul_muat[i].modul);
+  }
+  free(modul_muat);
+  modul_muat = NULL;
+  jumlah_modul_muat = 0;
 
   return kepala;
 }

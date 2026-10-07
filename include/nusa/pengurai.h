@@ -23,6 +23,8 @@ typedef enum {
   PSA_SO_LINUX,
   PSA_ARS_INTEL_32,
   PSA_ARS_INTEL_64,
+  PSA_MUAT,
+  PSA_TITIK,
 } TipePSA;
 
 typedef struct PSA PSA;

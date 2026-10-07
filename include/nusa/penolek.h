@@ -24,6 +24,9 @@ typedef enum {
   TIPE_TOLEK_KOMA,                 // ,
   TIPE_TOLEK_KURUNG_KURAWAT_BUKA,  // {
   TIPE_TOLEK_KURUNG_KURAWAT_TUTUP, // }
+  TIPE_TOLEK_OPERASI_ISI,          // =
+  TIPE_TOLEK_TIPE_DATA_MUAT,       // muat
+  TIPE_TOLEK_TITIK,                // .
 } TipeTolek;
 
 typedef struct {

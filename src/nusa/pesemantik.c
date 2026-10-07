@@ -18,6 +18,30 @@ typedef struct {
 } Fungsi;
 
 typedef struct {
+  char *orig_modul;
+  char *var_name;
+} MuatMap;
+
+static MuatMap *muat_maps = NULL;
+static int muat_map_count = 0;
+
+static void add_muat_map(const char *orig_modul, const char *var_name) {
+  muat_maps = realloc(muat_maps, sizeof(MuatMap) * (muat_map_count + 1));
+  muat_maps[muat_map_count].orig_modul = strdup(orig_modul);
+  muat_maps[muat_map_count].var_name = strdup(var_name);
+  muat_map_count++;
+}
+
+static const char *resolve_var_modul(const char *orig_modul) {
+  for (int i = 0; i < muat_map_count; i++) {
+    if (strcmp(muat_maps[i].orig_modul, orig_modul) == 0)
+      return muat_maps[i].var_name;
+  }
+  return orig_modul;
+}
+
+
+typedef struct {
   Fungsi *data;
   int jumlah;
   int kapasitas;
@@ -34,21 +58,72 @@ static bool sama_modul(const char *a, const char *b) {
 }
 
 static Fungsi *cari_fungsi(const char *nama, const char *modul_pemanggil) {
+  const char *titik = strchr(nama, '.');
+  if (titik) {
+    size_t len_var = (size_t)(titik - nama);
+    const char *fn_nama = titik + 1;
+
+    for (int m = 0; m < muat_map_count; m++) {
+      if (strncmp(muat_maps[m].var_name, nama, len_var) != 0 ||
+          muat_maps[m].var_name[len_var] != '\0')
+        continue;
+      const char *modul_lookup = muat_maps[m].orig_modul;
+      for (int i = 0; i < tabel.jumlah; i++) {
+        Fungsi *f = &tabel.data[i];
+        if (f->modul && strcmp(f->modul, modul_lookup) == 0 &&
+            strcmp(f->nama, fn_nama) == 0 && (f->pub || f->eks))
+          return f;
+      }
+    }
+    return NULL;
+  }
+
   for (int i = 0; i < tabel.jumlah; i++) {
     if (strcmp(tabel.data[i].nama, nama) == 0 &&
         sama_modul(tabel.data[i].modul, modul_pemanggil))
       return &tabel.data[i];
   }
-  for (int i = 0; i < tabel.jumlah; i++) {
-    if (strcmp(tabel.data[i].nama, nama) == 0 &&
-        (tabel.data[i].pub || tabel.data[i].eks))
-      return &tabel.data[i];
+
+  for (int m = 0; m < muat_map_count; m++) {
+    if (strcmp(muat_maps[m].var_name, "_") == 0) {
+      const char *modul_lookup = muat_maps[m].orig_modul;
+      for (int i = 0; i < tabel.jumlah; i++) {
+        if (strcmp(tabel.data[i].nama, nama) == 0 &&
+            sama_modul(tabel.data[i].modul, modul_lookup) &&
+            (tabel.data[i].pub || tabel.data[i].eks))
+          return &tabel.data[i];
+      }
+    }
   }
 
   return NULL;
 }
 
 static Fungsi *cari_privat_lain(const char *nama, const char *modul_pemanggil) {
+  const char *titik = strchr(nama, '.');
+  if (titik) {
+    size_t len_var = (size_t)(titik - nama);
+    const char *fn_nama = titik + 1;
+    const char *var_name = NULL;
+    for (int m = 0; m < muat_map_count; m++) {
+      if (strncmp(muat_maps[m].var_name, nama, len_var) == 0 &&
+          muat_maps[m].var_name[len_var] == '\0') {
+        var_name = muat_maps[m].orig_modul;
+        break;
+      }
+    }
+    const char *modul_lookup = var_name ? var_name : nama;
+    for (int i = 0; i < tabel.jumlah; i++) {
+      Fungsi *f = &tabel.data[i];
+      if (f->modul && strcmp(f->modul, modul_lookup) == 0 &&
+          strcmp(f->nama, fn_nama) == 0) {
+        if (!f->pub && !f->eks)
+          return f;
+      }
+    }
+    return NULL;
+  }
+
   for (int i = 0; i < tabel.jumlah; i++) {
     if (strcmp(tabel.data[i].nama, nama) == 0 &&
         !sama_modul(tabel.data[i].modul, modul_pemanggil))
@@ -90,6 +165,7 @@ static bool daftarkan(const PSA *deklarasi, const char *modul) {
 
     if (anak->tipe == PSA_KATA_KUNCI) {
       fn->eks = true;
+      fn->pub = true; // eks pasti pub
       continue;
     }
     if (anak->tipe == PSA_KATA_KUNCI_PUBLIK) {
@@ -215,6 +291,34 @@ int pesemantik(const PSA *akar) {
 
     for (int j = 0; j < berkas->jumlah_anak; j++) {
       const PSA *item = berkas->anak[j];
+      if (item->tipe == PSA_MUAT) {
+        if (!item->jalur) {
+          printf("Kesalahan: berkas '%.*s' tidak ditemukan (di %s)\n",
+                 item->anak[0]->panjang, item->anak[0]->teks,
+                 berkas->jalur ? berkas->jalur : "?");
+          galat++;
+        } else {
+          for (int k = 1; k < item->jumlah_anak; k++) {
+            const PSA *modul_node = item->anak[k];
+            if (modul_node->tipe == PSA_PENGENAL) {
+              add_muat_map(modul_node->teks, item->teks);
+            }
+          }
+        }
+        continue;
+      }
+    }
+  }
+
+  for (int i = 0; i < akar->jumlah_anak; i++) {
+    const PSA *berkas = akar->anak[i];
+    if (berkas->tipe != PSA_BERKAS)
+      continue;
+
+    for (int j = 0; j < berkas->jumlah_anak; j++) {
+      const PSA *item = berkas->anak[j];
+      if (item->tipe == PSA_MUAT)
+        continue;
       if (item->tipe != PSA_DEKLARASI)
         continue;
 
@@ -238,6 +342,14 @@ int pesemantik(const PSA *akar) {
         galat += cek_panggilan(item, berkas->jalur);
     }
   }
+
+  for (int i = 0; i < muat_map_count; i++) {
+    free(muat_maps[i].orig_modul);
+    free(muat_maps[i].var_name);
+  }
+  free(muat_maps);
+  muat_maps = NULL;
+  muat_map_count = 0;
 
   bersihkan_tabel();
   return galat;

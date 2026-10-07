@@ -50,6 +50,12 @@ const char *nama_tolek(TipeTolek tipe) {
     return "KURUNG KURAWAT BUKA";
   case TIPE_TOLEK_KURUNG_KURAWAT_TUTUP:
     return "KURUNG KURAWAT TUTUP";
+  case TIPE_TOLEK_OPERASI_ISI:
+    return "OPERASI ISI";
+  case TIPE_TOLEK_TIPE_DATA_MUAT:
+    return "TIPE DATA MUAT";
+  case TIPE_TOLEK_TITIK:
+    return "TITIK";
   default:
     return "TIDAK DIKETAHUI";
   }
@@ -132,6 +138,13 @@ const char *penolek(const char *isi, Tolek *hasil) {
       hasil->teks = awal;
       hasil->panjang = 3;
       return isi + 3;
+    }
+
+    if (strncmp(isi, "muat", 4) == 0 && batas_kata_kunci(isi, 4)) {
+      hasil->tipe = TIPE_TOLEK_TIPE_DATA_MUAT;
+      hasil->teks = awal;
+      hasil->panjang = 4;
+      return isi + 4;
     }
 
     if (strncmp(isi, "b32", 3) == 0 && batas_kata_kunci(isi, 3)) {
@@ -217,6 +230,20 @@ const char *penolek(const char *isi, Tolek *hasil) {
 
   if (*isi == ',') {
     hasil->tipe = TIPE_TOLEK_KOMA;
+    hasil->teks = isi;
+    hasil->panjang = 1;
+    return isi + 1;
+  }
+
+  if (*isi == '=') {
+    hasil->tipe = TIPE_TOLEK_OPERASI_ISI;
+    hasil->teks = isi;
+    hasil->panjang = 1;
+    return isi + 1;
+  }
+
+  if (*isi == '.') {
+    hasil->tipe = TIPE_TOLEK_TITIK;
     hasil->teks = isi;
     hasil->panjang = 1;
     return isi + 1;
