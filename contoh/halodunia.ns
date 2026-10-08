@@ -5,7 +5,6 @@
 
 muat
 std "std.ns" # Muat berkas pustaka standar
-"cetak_tergantung_os_dan_arsitektur.ns"
 
 std.cetak("Halo Aerell!\n")
 

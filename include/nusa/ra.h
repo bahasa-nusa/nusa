@@ -30,8 +30,7 @@ typedef struct InstruksiRA {
   struct InstruksiRA *next;
 } InstruksiRA;
 
-InstruksiRA *bangkitkan_ra(const PSA *akar, const char *so,
-                           const char *arsitektur);
+InstruksiRA *bangkitkan_ra(const PSA *akar);
 InstruksiRA *tambah_impor_ra(InstruksiRA *daftar, const InstruksiRA *sumber);
 void cetak_ra_permodul(const InstruksiRA *daftar);
 void bersihkan_ra(InstruksiRA *daftar);

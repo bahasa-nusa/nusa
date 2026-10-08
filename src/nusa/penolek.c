@@ -36,14 +36,6 @@ const char *nama_tolek(TipeTolek tipe) {
     return "TIPE DATA B32";
   case TIPE_TOLEK_TIPE_DATA_UNTAIAN:
     return "TIPE DATA UNTAIAN";
-  case TIPE_TOLEK_SO_WINDOWS:
-    return "SISTEM OPERASI WINDOWS";
-  case TIPE_TOLEK_SO_LINUX:
-    return "SISTEM OPERASI LINUX";
-  case TIPE_TOLEK_ARS_INTEL_32:
-    return "ARSITEKTUR INTEL 32";
-  case TIPE_TOLEK_ARS_INTEL_64:
-    return "ARSITEKTUR INTEL 64";
   case TIPE_TOLEK_KOMA:
     return "KOMA";
   case TIPE_TOLEK_KURUNG_KURAWAT_BUKA:
@@ -153,34 +145,6 @@ const char *penolek(const char *isi, Tolek *hasil) {
       hasil->teks = awal;
       hasil->panjang = 3;
       return isi + 3;
-    }
-
-    if (strncmp(isi, "wins", 4) == 0 && batas_kata_kunci(isi, 4)) {
-      hasil->tipe = TIPE_TOLEK_SO_WINDOWS;
-      hasil->teks = awal;
-      hasil->panjang = 4;
-      return isi + 4;
-    }
-
-    if (strncmp(isi, "linux", 5) == 0 && batas_kata_kunci(isi, 5)) {
-      hasil->tipe = TIPE_TOLEK_SO_LINUX;
-      hasil->teks = awal;
-      hasil->panjang = 5;
-      return isi + 5;
-    }
-
-    if (strncmp(isi, "intel32", 7) == 0 && batas_kata_kunci(isi, 7)) {
-      hasil->tipe = TIPE_TOLEK_ARS_INTEL_32;
-      hasil->teks = awal;
-      hasil->panjang = 7;
-      return isi + 7;
-    }
-
-    if (strncmp(isi, "intel64", 7) == 0 && batas_kata_kunci(isi, 7)) {
-      hasil->tipe = TIPE_TOLEK_ARS_INTEL_64;
-      hasil->teks = awal;
-      hasil->panjang = 7;
-      return isi + 7;
     }
 
     while (*isi && (isalnum((unsigned char)*isi) || *isi == '_'))

@@ -18,11 +18,6 @@ typedef enum {
   PSA_KATA_KUNCI_PUBLIK,  // pub
   PSA_TIPE_DATA_BILANGAN, // b32
   PSA_TIPE_DATA_UNTAIAN,  // unt
-  PSA_BLOK_OS_ARSITEKTUR, // wins, linux, intel32, intel64 { ... }
-  PSA_SO_WINDOWS,
-  PSA_SO_LINUX,
-  PSA_ARS_INTEL_32,
-  PSA_ARS_INTEL_64,
   PSA_MUAT,
   PSA_TITIK,
 } TipePSA;

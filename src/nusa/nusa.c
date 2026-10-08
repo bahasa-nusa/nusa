@@ -245,7 +245,7 @@ int main(int argc, char **argv) {
             return 1;
           }
           set_target(arg.so, arg.arsitektur);
-          InstruksiRA *ra = bangkitkan_ra(psa, arg.so, arg.arsitektur);
+          InstruksiRA *ra = bangkitkan_ra(psa);
           InstruksiRA *ra_imp = tambah_impor_ra(ra, ra);
           if (arg.ra) {
             printf("\nRA:\n");
