@@ -66,7 +66,6 @@ Perintah:
   smtk <berkas>                                                 Pemeriksaan semantik.
   ra <sistem-operasi> <arsitektur> <berkas>                     Representasi antara.
   opt <sistem-operasi> <arsitektur> <berkas>                    Optimasi.
-  rkt <sistem-operasi> <arsitektur> <berkas> [<berkas-keluar>]  Bahasa rakitan.
 
 Sistem Operasi:
   wins
@@ -75,7 +74,7 @@ Sistem Operasi:
 Arsitektur:
   64
   32
-
+  
 ```
 
 Contoh keluaran:
