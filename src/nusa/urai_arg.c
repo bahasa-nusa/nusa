@@ -19,16 +19,16 @@ Arg urai_arg(int argc, char **argv) {
       args.smtk = true;
     } else if (strcmp(argv[i], "ra") == 0) {
       args.ra = true;
+      if (i + 1 < argc && strcmp(argv[i + 1], "opt") == 0) {
+        args.opt = true;
+        i++;
+      }
       if (i + 2 < argc) {
         args.so = argv[++i];
         args.arsitektur = argv[++i];
       }
     } else if (strcmp(argv[i], "opt") == 0) {
-      args.opt = true;
-      if (i + 2 < argc) {
-        args.so = argv[++i];
-        args.arsitektur = argv[++i];
-      }
+      // Abaikan opt mandiri
     } else if (argv[i][0] != '-') {
       args.berkas_masuk = argv[i];
     }

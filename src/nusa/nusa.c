@@ -24,8 +24,7 @@ void cetak_info() {
   printf("  leks <berkas>                                                 Analisis leksim.\n");
   printf("  urai <berkas>                                                 Penguraian pohon sintaksis abstrak (PSA).\n");
   printf("  smtk <berkas>                                                 Pemeriksaan semantik.\n");
-  printf("  ra <sistem-operasi> <arsitektur> <berkas>                     Representasi antara.\n");
-  printf("  opt <sistem-operasi> <arsitektur> <berkas>                    Optimasi.\n\n");
+  printf("  ra [opt] <sistem-operasi> <arsitektur> <berkas>               Representasi antara.\n\n");
 
   printf("Sistem Operasi:\n");
   printf("  wins\n");
@@ -228,7 +227,7 @@ int main(int argc, char **argv) {
         }
         if (arg.ra || arg.opt) {
           if (!arg.so || !arg.arsitektur) {
-            printf("Perintah ra atau opt memerlukan <sistem-operasi> dan "
+            printf("Perintah ra memerlukan <sistem-operasi> dan "
                    "<arsitektur>\n");
             return 1;
           }
@@ -245,20 +244,18 @@ int main(int argc, char **argv) {
           InstruksiRA *ra = bangkitkan_ra(psa);
           InstruksiRA *ra_imp = tambah_impor_ra(ra, ra);
           if (arg.ra) {
-            printf("\nRA:\n");
-            cetak_ra_permodul(ra_imp);
-          }
-          if (arg.opt) {
-            InstruksiRA *ra_opt = optimalkan(ra);
-            InstruksiRA *ra_opt_imp = tambah_impor_ra(ra_opt, ra_opt);
             if (arg.opt) {
+              InstruksiRA *ra_opt = optimalkan(ra);
+              InstruksiRA *ra_opt_imp = tambah_impor_ra(ra_opt, ra_opt);
               printf("\nOptimasi:\n");
               cetak_ra_permodul(ra_opt_imp);
+              bersihkan_ra(ra_imp);
+              bersihkan_ra(ra_opt_imp);
+            } else {
+              printf("\nRA:\n");
+              cetak_ra_permodul(ra_imp);
+              bersihkan_ra(ra_imp);
             }
-            bersihkan_ra(ra_imp);
-            bersihkan_ra(ra_opt_imp);
-          } else {
-            bersihkan_ra(ra_imp);
           }
         }
         bersihkan_psa(psa);
