@@ -3,10 +3,11 @@
 
 # Ini adalah komentar
 
-std muat = 'standar.ns' # Muat berkas pustaka standar
-_ muat = 'cetak_tergantung_os_dan_arsitektur.ns'
+muat
+std "std.ns" # Muat berkas pustaka standar
+"cetak_tergantung_os_dan_arsitektur.ns"
 
-std.cetak('Halo Aerell!\n')
+std.cetak("Halo Aerell!\n")
 
 # Panggil fungsi untuk keluar
-keluar(0)
+std.keluar(0)

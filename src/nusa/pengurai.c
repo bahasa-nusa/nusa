@@ -180,8 +180,9 @@ static PSA *urai_berkas(const char *isi, const char *jalur, bool titik_masuk);
 
 static void muat_siswa(PSA *akar, PSA *node_muat, const char *teks_jalur,
                        int panjang) {
-  if (panjang < 2 || teks_jalur[0] != '\'' ||
-      teks_jalur[panjang - 1] != '\'')
+  char quote = teks_jalur[0];
+  if (panjang < 2 || (quote != '\'' && quote != '"') ||
+      teks_jalur[panjang - 1] != quote)
     return;
 
   int pjg_jalur = panjang - 2;
@@ -194,7 +195,8 @@ static void muat_siswa(PSA *akar, PSA *node_muat, const char *teks_jalur,
   strncpy(nama, teks_jalur + 1, pjg_jalur);
   nama[pjg_jalur] = '\0';
 
-  char *res = cari_berkas(nama);
+  char *res = NULL;
+  cari_berkas(nama, &res, NULL);
   free(nama);
   if (!res)
     return;
@@ -202,6 +204,12 @@ static void muat_siswa(PSA *akar, PSA *node_muat, const char *teks_jalur,
   node_muat->jalur = salin(res);
 
   if (berkas_sudah_dimuat(res)) {
+    for (int i = 0; i < akar->jumlah_anak; i++) {
+      PSA *b = akar->anak[i];
+      if (b->tipe == PSA_BERKAS && b->jalur && strcmp(b->jalur, res) == 0 && b->modul) {
+        tambah_anak(node_muat, buat_node(PSA_PENGENAL, b->modul, (int)strlen(b->modul)));
+      }
+    }
     free(res);
     return;
   }
@@ -210,26 +218,29 @@ static void muat_siswa(PSA *akar, PSA *node_muat, const char *teks_jalur,
 
   const char *sub_isi = baca_berkas(res);
   if (sub_isi) {
-    int sebelum = akar->jumlah_anak;
     PSA *sub = urai_berkas(sub_isi, res, false);
-
-    for (int i = 0; i < sub->jumlah_anak - 1; i++) {
+    for (int i = 0; i < sub->jumlah_anak; i++) {
       tambah_anak(akar, sub->anak[i]);
-      sub->anak[i] = NULL;
     }
-
-    PSA *self = sub->anak[sub->jumlah_anak - 1];
-    sub->anak[sub->jumlah_anak - 1] = NULL;
     free(sub->anak);
     free(sub);
-    tambah_anak(akar, self);
     bersihkan_berkas(sub_isi);
 
-    int sesudah = akar->jumlah_anak;
-    for (int i = sebelum; i < sesudah; i++) {
+    for (int i = 0; i < akar->jumlah_anak; i++) {
       PSA *b = akar->anak[i];
-      if (b->tipe == PSA_BERKAS && b->modul)
-        tambah_anak(node_muat, buat_node(PSA_PENGENAL, b->modul, (int)strlen(b->modul)));
+      if (b->tipe == PSA_BERKAS && b->modul) {
+        bool sudah_ada = false;
+        for (int k = 1; k < node_muat->jumlah_anak; k++) {
+          if (node_muat->anak[k]->tipe == PSA_PENGENAL &&
+              strcmp(node_muat->anak[k]->teks, b->modul) == 0) {
+            sudah_ada = true;
+            break;
+          }
+        }
+        if (!sudah_ada && b->jalur && strcmp(b->jalur, res) == 0) {
+          tambah_anak(node_muat, buat_node(PSA_PENGENAL, b->modul, (int)strlen(b->modul)));
+        }
+      }
     }
   }
 
@@ -252,39 +263,66 @@ static PSA *urai_berkas(const char *isi, const char *jalur, bool titik_masuk) {
     if (tolek.tipe == TIPE_TOLEK_KOMENTAR)
       continue;
 
+    if (tolek.tipe == TIPE_TOLEK_TIPE_DATA_MUAT) {
+      Tolek lanjut;
+      const char *p = ptr;
+      char *alias = NULL;
+      int alias_panjang = 0;
+      int jumlah = 0;
+
+      for (;;) {
+        const char *p1 = penolek(p, &lanjut);
+        if (lanjut.tipe == TIPE_TOLEK_KOMENTAR) {
+          p = p1;
+          continue;
+        }
+
+        if (lanjut.tipe == TIPE_TOLEK_PENGENAL) {
+          Tolek t2;
+          const char *p2 = penolek(p1, &t2);
+          while (t2.tipe == TIPE_TOLEK_KOMENTAR)
+            p2 = penolek(p2, &t2);
+          if (t2.tipe != TIPE_TOLEK_NILAI_UNTAIAN)
+            break;
+          free(alias);
+          alias = salin_n(lanjut.teks, lanjut.panjang);
+          alias_panjang = lanjut.panjang;
+          p = p1;
+          continue;
+        }
+
+        if (lanjut.tipe == TIPE_TOLEK_NILAI_UNTAIAN) {
+          PSA *node = buat_node(PSA_MUAT, alias ? alias : "_",
+                                alias ? alias_panjang : 1);
+          node->modul = salin(modul->modul);
+          tambah_anak(node, buat_node(PSA_NILAI_UNTAIAN, lanjut.teks, lanjut.panjang));
+          muat_siswa(akar, node, lanjut.teks, lanjut.panjang);
+          tambah_anak(modul, node);
+          jumlah++;
+          free(alias);
+          alias = NULL;
+          alias_panjang = 0;
+          p = p1;
+          continue;
+        }
+        break;
+      }
+
+      free(alias);
+      ptr = p;
+      if (!jumlah)
+        printf(
+          "Kesalahan: sintaks muat 'muat [alias] \"nama_berkas.ns\"' (di %s)\n", 
+          modul->jalur ? modul->jalur : "?"
+        );
+      last_decl = NULL;
+      continue;
+    }
+
     if (tolek.tipe == TIPE_TOLEK_PENGENAL) {
       Tolek lanjut;
       const char *ptr_lanjut = penolek(ptr, &lanjut);
 
-      if (lanjut.tipe == TIPE_TOLEK_TIPE_DATA_MUAT) {
-        Tolek t_setara;
-        const char *ptr_setara = penolek(ptr_lanjut, &t_setara);
-
-        Tolek t_jalur = {0};
-        const char *ptr_jalur = NULL;
-        if (t_setara.tipe == TIPE_TOLEK_OPERASI_ISI)
-          ptr_jalur = penolek(ptr_setara, &t_jalur);
-
-        if (t_setara.tipe == TIPE_TOLEK_OPERASI_ISI &&
-            t_jalur.tipe == TIPE_TOLEK_NILAI_UNTAIAN) {
-          PSA *node = buat_node(PSA_MUAT, tolek.teks, tolek.panjang);
-          node->modul = salin(modul->modul);
-          tambah_anak(node, buat_node(PSA_NILAI_UNTAIAN, t_jalur.teks,
-                                      t_jalur.panjang));
-          muat_siswa(akar, node, t_jalur.teks, t_jalur.panjang);
-          tambah_anak(modul, node);
-          ptr = ptr_jalur;
-        } else {
-          printf(
-            "Kesalahan: sintaks muat '%.*s muat = \'nama_berkas.ns\' (di %s)\n",
-            tolek.panjang, tolek.teks,
-            modul->jalur ? modul->jalur : "?"
-          );
-          ptr = ptr_jalur ? ptr_jalur : ptr_setara;
-        }
-        last_decl = NULL;
-        continue;
-      }
 
       if (lanjut.tipe == TIPE_TOLEK_TITIK) {
         Tolek sesudah;

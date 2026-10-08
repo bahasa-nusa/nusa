@@ -4,6 +4,12 @@
 #ifndef NUSA_BERKAS_H
 #define NUSA_BERKAS_H
 
+typedef enum {
+  CARI_OK,
+  CARI_TIDAK_DITEMUKAN,
+  CARI_AMBIGU
+} CariHasil;
+
 const char *baca_berkas(const char *nama_berkas);
 
 void bersihkan_berkas(const char *isi_berkas);
@@ -25,6 +31,6 @@ char *direktori_dari(const char *jalur);
 
 char *jalur_biner(void);
 
-char *cari_berkas(const char *nama);
+CariHasil cari_berkas(const char *nama, char **hasil, char **lokasi_lain);
 
 #endif

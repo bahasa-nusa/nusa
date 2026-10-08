@@ -1,5 +1,6 @@
 # Copyright 2026 Pengembang Bahasa Pemrograman Nusa
 # SPDX-License-Identifier: Apache-2.0
 
-cetak(teks unt) eks
-keluar(kode b32) eks
+muat
+"std/cetak.ns"
+"std/keluar.ns"

@@ -52,7 +52,7 @@ static void label_string(char *keluaran, size_t n, int id) {
 static void cetak_string_rodata(FILE *out, const char *nilai) {
   size_t pjg = strlen(nilai);
   const char *isi = nilai;
-  if (pjg >= 2 && isi[0] == '\'' && isi[pjg - 1] == '\'')
+  if (pjg >= 2 && (isi[0] == '\'' || isi[0] == '"') && isi[pjg - 1] == isi[0])
     isi += 1, pjg -= 2;
 
   fprintf(out, "    .ascii \"");

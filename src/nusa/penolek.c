@@ -87,11 +87,12 @@ const char *penolek(const char *isi, Tolek *hasil) {
     return isi;
   }
 
-  if (*isi == '\'') {
+  if (*isi == '\'' || *isi == '\"') {
+    char quote = *isi;
     const char *awal = isi++;
-    while (*isi && *isi != '\'' && *isi != '\n')
+    while (*isi && *isi != quote && *isi != '\n')
       isi++;
-    if (*isi == '\'')
+    if (*isi == quote)
       isi++;
 
     hasil->tipe = TIPE_TOLEK_NILAI_UNTAIAN;

@@ -156,41 +156,69 @@ static char *gabung_akar(const char *akar, const char *nama) {
   return r;
 }
 
-char *cari_berkas(const char *nama) {
+CariHasil cari_berkas(const char *nama, char **hasil, char **lokasi_lain) {
   if (!nama || nama[0] == '\0')
-    return NULL;
+    return CARI_TIDAK_DITEMUKAN;
 
 #ifdef _WIN32
   bool absolut = nama[1] == ':' || nama[0] == '/' || nama[0] == '\\';
 #else
   bool absolut = nama[0] == '/';
 #endif
-  if (absolut)
-    return berkas_ada(nama) ? jalur_kanonis(nama) : NULL;
-
-  char *kandidat = gabung_akar(direktori_berkas_utama, nama);
-  if (kandidat) {
-    if (berkas_ada(kandidat)) {
-      char *k = jalur_kanonis(kandidat);
-      free(kandidat);
-      return k;
+  if (absolut) {
+    if (berkas_ada(nama)) {
+      if (hasil)
+        *hasil = jalur_kanonis(nama);
+      return CARI_OK;
     }
-    free(kandidat);
+    return CARI_TIDAK_DITEMUKAN;
   }
 
-  char *akar_kode = gabung_akar(direktori_instalasi, "kode");
-  kandidat = gabung_akar(akar_kode, nama);
-  free(akar_kode);
-  if (kandidat) {
-    if (berkas_ada(kandidat)) {
-      char *k = jalur_kanonis(kandidat);
-      free(kandidat);
-      return k;
+  char *kandidat_utama = NULL;
+  char *kandidat_instalasi = NULL;
+
+  if (direktori_berkas_utama) {
+    kandidat_utama = gabung_akar(direktori_berkas_utama, nama);
+    if (kandidat_utama && !berkas_ada(kandidat_utama)) {
+      free(kandidat_utama);
+      kandidat_utama = NULL;
     }
-    free(kandidat);
   }
 
-  return NULL;
+  if (direktori_instalasi) {
+    char *akar_kode = gabung_akar(direktori_instalasi, "kode");
+    if (akar_kode) {
+      kandidat_instalasi = gabung_akar(akar_kode, nama);
+      free(akar_kode);
+      if (kandidat_instalasi && !berkas_ada(kandidat_instalasi)) {
+        free(kandidat_instalasi);
+        kandidat_instalasi = NULL;
+      }
+    }
+  }
+
+  if (kandidat_utama && kandidat_instalasi) {
+    printf("Galat Ambiguitas: Berkas '%s' ditemukan di dua lokasi (direktori berkas utama DAN direktori instalasi Nusa). Proses dihentikan untuk menjaga kejelasan dan kepastian.\n", nama);
+    free(kandidat_utama);
+    free(kandidat_instalasi);
+    exit(1);
+  }
+
+  if (kandidat_utama) {
+    if (hasil)
+      *hasil = jalur_kanonis(kandidat_utama);
+    free(kandidat_utama);
+    return CARI_OK;
+  }
+
+  if (kandidat_instalasi) {
+    if (hasil)
+      *hasil = jalur_kanonis(kandidat_instalasi);
+    free(kandidat_instalasi);
+    return CARI_OK;
+  }
+
+  return CARI_TIDAK_DITEMUKAN;
 }
 
 const char *baca_berkas(const char *nama_berkas) {

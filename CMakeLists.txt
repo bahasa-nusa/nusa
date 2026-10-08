@@ -45,28 +45,28 @@ install(
     DESTINATION "kode"
 )
 
-file(GLOB SO_WINDOWS_INTEL_32_PUSTAKA_FILES "so/windows/intel_32/pustaka/*.a")
+file(GLOB SO_WINS_INTEL32_PUS_FILES "so/wins/intel32/pus/*.a")
 install(
-    FILES ${SO_WINDOWS_INTEL_32_PUSTAKA_FILES}
-    DESTINATION "so/windows/intel_32/pustaka"
+    FILES ${SO_WINS_INTEL32_PUS_FILES}
+    DESTINATION "so/wins/intel32/pus"
 )
 
-file(GLOB SO_WINDOWS_INTEL_64_PUSTAKA_FILES "so/windows/intel_64/pustaka/*.a")
+file(GLOB SO_WIS_INTEL64_PUS_FILES "so/wins/intel64/pus/*.a")
 install(
-    FILES ${SO_WINDOWS_INTEL_64_PUSTAKA_FILES}
-    DESTINATION "so/windows/intel_64/pustaka"
+    FILES ${SO_WINS_INTEL64_PUS_FILES}
+    DESTINATION "so/wins/intel64/pus"
 )
 
-file(GLOB SO_WINDOWS_INTEL_32_FILES "so/windows/intel_32/*.exe" "so/windows/intel_32/*.dll")
+file(GLOB SO_WINS_INTEL32_FILES "so/wins/intel32/*.exe" "so/wins/intel32/*.dll")
 install(
-    FILES ${SO_WINDOWS_INTEL_32_FILES}
-    DESTINATION "so/windows/intel_32"
+    FILES ${SO_WINS_INTEL32_FILES}
+    DESTINATION "so/wins/intel32"
 )
 
-file(GLOB SO_WINDOWS_INTEL_64_FILES "so/windows/intel_64/*.exe" "so/windows/intel_64/*.dll")
+file(GLOB SO_WINS_INTEL64_FILES "so/wins/intel64/*.exe" "so/wins/intel64/*.dll")
 install(
-    FILES ${SO_WINDOWS_INTEL_64_FILES}
-    DESTINATION "so/windows/intel_64"
+    FILES ${SO_WINS_INTEL64_FILES}
+    DESTINATION "so/wins/intel64"
 )
 
 install(

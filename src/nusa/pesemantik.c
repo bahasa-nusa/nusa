@@ -20,15 +20,17 @@ typedef struct {
 typedef struct {
   char *orig_modul;
   char *var_name;
+  char *modul_pemanggil;
 } MuatMap;
 
 static MuatMap *muat_maps = NULL;
 static int muat_map_count = 0;
 
-static void add_muat_map(const char *orig_modul, const char *var_name) {
+static void add_muat_map(const char *orig_modul, const char *var_name, const char *modul_pemanggil) {
   muat_maps = realloc(muat_maps, sizeof(MuatMap) * (muat_map_count + 1));
   muat_maps[muat_map_count].orig_modul = strdup(orig_modul);
   muat_maps[muat_map_count].var_name = strdup(var_name);
+  muat_maps[muat_map_count].modul_pemanggil = modul_pemanggil ? strdup(modul_pemanggil) : NULL;
   muat_map_count++;
 }
 
@@ -63,7 +65,10 @@ static Fungsi *cari_fungsi(const char *nama, const char *modul_pemanggil) {
     size_t len_var = (size_t)(titik - nama);
     const char *fn_nama = titik + 1;
 
+    /* Coba cari langsung di modul pemanggil */
     for (int m = 0; m < muat_map_count; m++) {
+      if (!sama_modul(muat_maps[m].modul_pemanggil, modul_pemanggil))
+        continue;
       if (strncmp(muat_maps[m].var_name, nama, len_var) != 0 ||
           muat_maps[m].var_name[len_var] != '\0')
         continue;
@@ -75,6 +80,34 @@ static Fungsi *cari_fungsi(const char *nama, const char *modul_pemanggil) {
           return f;
       }
     }
+
+    const char *modul_alias = NULL;
+    for (int m = 0; m < muat_map_count; m++) {
+      if (!sama_modul(muat_maps[m].modul_pemanggil, modul_pemanggil))
+        continue;
+      if (strncmp(muat_maps[m].var_name, nama, len_var) == 0 &&
+          muat_maps[m].var_name[len_var] == '\0') {
+        modul_alias = muat_maps[m].orig_modul;
+        break;
+      }
+    }
+
+    if (modul_alias) {
+      for (int m = 0; m < muat_map_count; m++) {
+        if (!sama_modul(muat_maps[m].modul_pemanggil, modul_alias))
+          continue;
+        if (strcmp(muat_maps[m].var_name, "_") != 0)
+          continue;
+        const char *modul_lookup = muat_maps[m].orig_modul;
+        for (int i = 0; i < tabel.jumlah; i++) {
+          Fungsi *f = &tabel.data[i];
+          if (f->modul && strcmp(f->modul, modul_lookup) == 0 &&
+              strcmp(f->nama, fn_nama) == 0 && (f->pub || f->eks))
+            return f;
+        }
+      }
+    }
+
     return NULL;
   }
 
@@ -85,6 +118,8 @@ static Fungsi *cari_fungsi(const char *nama, const char *modul_pemanggil) {
   }
 
   for (int m = 0; m < muat_map_count; m++) {
+    if (!sama_modul(muat_maps[m].modul_pemanggil, modul_pemanggil))
+      continue;
     if (strcmp(muat_maps[m].var_name, "_") == 0) {
       const char *modul_lookup = muat_maps[m].orig_modul;
       for (int i = 0; i < tabel.jumlah; i++) {
@@ -106,6 +141,8 @@ static Fungsi *cari_privat_lain(const char *nama, const char *modul_pemanggil) {
     const char *fn_nama = titik + 1;
     const char *var_name = NULL;
     for (int m = 0; m < muat_map_count; m++) {
+      if (!sama_modul(muat_maps[m].modul_pemanggil, modul_pemanggil))
+        continue;
       if (strncmp(muat_maps[m].var_name, nama, len_var) == 0 &&
           muat_maps[m].var_name[len_var] == '\0') {
         var_name = muat_maps[m].orig_modul;
@@ -165,7 +202,7 @@ static bool daftarkan(const PSA *deklarasi, const char *modul) {
 
     if (anak->tipe == PSA_KATA_KUNCI) {
       fn->eks = true;
-      fn->pub = true; // eks pasti pub
+      fn->pub = true;
       continue;
     }
     if (anak->tipe == PSA_KATA_KUNCI_PUBLIK) {
@@ -301,7 +338,7 @@ int pesemantik(const PSA *akar) {
           for (int k = 1; k < item->jumlah_anak; k++) {
             const PSA *modul_node = item->anak[k];
             if (modul_node->tipe == PSA_PENGENAL) {
-              add_muat_map(modul_node->teks, item->teks);
+              add_muat_map(modul_node->teks, item->teks, berkas->modul);
             }
           }
         }
@@ -346,6 +383,7 @@ int pesemantik(const PSA *akar) {
   for (int i = 0; i < muat_map_count; i++) {
     free(muat_maps[i].orig_modul);
     free(muat_maps[i].var_name);
+    free(muat_maps[i].modul_pemanggil);
   }
   free(muat_maps);
   muat_maps = NULL;

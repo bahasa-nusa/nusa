@@ -197,10 +197,14 @@ static const InstruksiRA *cari_simbol(const InstruksiRA *panggil) {
     const InstruksiRA *d = tabel_simbol[i].deklarasi;
     if (strcmp(d->nama, panggil->nama) != 0)
       continue;
-
     if (modul_sama_ins(panggil, tabel_simbol[i].modul))
       return d;
+  }
 
+  for (int i = 0; i < jumlah_simbol; i++) {
+    const InstruksiRA *d = tabel_simbol[i].deklarasi;
+    if (strcmp(d->nama, panggil->nama) != 0)
+      continue;
     for (int m = 0; m < jumlah_modul_muat; m++) {
       if (strcmp(modul_muat[m].var, "_") == 0 &&
           tabel_simbol[i].modul &&
@@ -423,8 +427,6 @@ InstruksiRA *bangkitkan_ra(const PSA *akar, const char *so,
       panggil->eks = false;
       panggil->pub = true;
       panggil->modul = salin_modul(berkas->modul);
-      panggil->nilai = malloc(sizeof(char *));
-      panggil->tipe_nilai = malloc(sizeof(TipeNilaiRA));
       dorong(&badan_utama, &ekor_badan_utama, panggil);
     }
   }

@@ -1,15 +1,15 @@
 #!/bin/sh
-# Bangun pustaka standar.a (Windows Intel 32)
-./so/windows/intel_32/as.exe -c ./so/windows/intel_32/rakitan/standar/keluar.s -o ./so/windows/intel_32/objek/standar/keluar.o
-./so/windows/intel_32/as.exe -c ./so/windows/intel_32/rakitan/standar/cetak.s -o ./so/windows/intel_32/objek/standar/cetak.o
+# Bangun pus std.a (Windows Intel 32)
+./so/wins/intel32/as.exe -c ./so/wins/intel32/rkt/std/keluar.s -o ./so/wins/intel32/obj/std/keluar.o
+./so/wins/intel32/as.exe -c ./so/wins/intel32/rkt/std/cetak.s -o ./so/wins/intel32/obj/std/cetak.o
 
-./so/windows/intel_32/ar rcs ./so/windows/intel_32/pustaka/standar.a ./so/windows/intel_32/objek/standar/keluar.o ./so/windows/intel_32/objek/standar/cetak.o
+./so/wins/intel32/ar rcs ./so/wins/intel32/pus/std.a ./so/wins/intel32/obj/std/keluar.o ./so/wins/intel32/obj/std/cetak.o
 
-# Bangun pustaka standar.a (Windows Intel 64)
-./so/windows/intel_64/as.exe -c ./so/windows/intel_64/rakitan/standar/keluar.s -o ./so/windows/intel_64/objek/standar/keluar.o
-./so/windows/intel_64/as.exe -c ./so/windows/intel_64/rakitan/standar/cetak.s -o ./so/windows/intel_64/objek/standar/cetak.o
+# Bangun pus std.a (Windows Intel 64)
+./so/wins/intel64/as.exe -c ./so/wins/intel64/rkt/std/keluar.s -o ./so/wins/intel64/obj/std/keluar.o
+./so/wins/intel64/as.exe -c ./so/wins/intel64/rkt/std/cetak.s -o ./so/wins/intel64/obj/std/cetak.o
 
-./so/windows/intel_64/ar rcs ./so/windows/intel_64/pustaka/standar.a ./so/windows/intel_64/objek/standar/keluar.o ./so/windows/intel_64/objek/standar/cetak.o
+./so/wins/intel64/ar rcs ./so/wins/intel64/pus/std.a ./so/wins/intel64/obj/std/keluar.o ./so/wins/intel64/obj/std/cetak.o
 
 # Bangun cmake project
 set -e

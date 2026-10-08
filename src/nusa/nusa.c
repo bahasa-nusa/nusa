@@ -73,37 +73,46 @@ static void kumpul_tolek(const char *isi, const char *jalur, bool titik_masuk) {
     if (tolek.tipe == TIPE_TOLEK_KOMENTAR)
       continue;
 
-    if (tolek.tipe == TIPE_TOLEK_NILAI_UNTAIAN && di_atas) {
-      int len = tolek.panjang;
-
-      if (len >= 2 && tolek.teks[0] == '\'' && tolek.teks[len - 1] == '\'') {
-        int path_len = len - 2;
-
-        if (path_len > 0) {
-          char *nama = malloc(path_len + 1);
-
-          if (nama) {
-            strncpy(nama, tolek.teks + 1, path_len);
-            nama[path_len] = '\0';
-
-            char *res = cari_berkas(nama);
-            free(nama);
-
-            if (res && !berkas_sudah_dimuat(res)) {
-              tandai_berkas_dimuat(res);
-
-              const char *sub = baca_berkas(res);
-              if (sub) {
-                kumpul_tolek(sub, res, false);
-                bersihkan_berkas(sub);
+    if (tolek.tipe == TIPE_TOLEK_TIPE_DATA_MUAT && di_atas) {
+      Tolek lanjut;
+      const char *ptr_lanjut = ptr;
+      while ((ptr_lanjut = penolek(ptr_lanjut, &lanjut)) &&
+             lanjut.tipe != TIPE_TOLEK_AKHIR) {
+        if (lanjut.tipe == TIPE_TOLEK_KOMENTAR)
+          continue;
+        if (lanjut.tipe == TIPE_TOLEK_PENGENAL)
+          continue;
+        if (lanjut.tipe == TIPE_TOLEK_NILAI_UNTAIAN) {
+          int len = lanjut.panjang;
+          char quote = lanjut.teks[0];
+          if (len >= 2 && (quote == '\'' || quote == '"') &&
+              lanjut.teks[len - 1] == quote) {
+            int path_len = len - 2;
+            if (path_len > 0) {
+              char *nama = malloc(path_len + 1);
+              if (nama) {
+                strncpy(nama, lanjut.teks + 1, path_len);
+                nama[path_len] = '\0';
+                char *res = NULL;
+                cari_berkas(nama, &res, NULL);
+                free(nama);
+                if (res && !berkas_sudah_dimuat(res)) {
+                  tandai_berkas_dimuat(res);
+                  const char *sub = baca_berkas(res);
+                  if (sub) {
+                    kumpul_tolek(sub, res, false);
+                    bersihkan_berkas(sub);
+                  }
+                }
+                free(res);
               }
             }
-
-            free(res);
           }
+          continue;
         }
+        break;
       }
-
+      ptr = ptr_lanjut;
       continue;
     }
 
@@ -217,6 +226,8 @@ int main(int argc, char **argv) {
           int galat = pesemantik(psa);
           if (!galat)
             printf("Tidak ada kesalahan\n");
+          else
+            return 1;
         }
         if (arg.ra || arg.opt || arg.rkt) {
           if (!arg.so || !arg.arsitektur) {
