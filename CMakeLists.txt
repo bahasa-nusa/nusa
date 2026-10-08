@@ -45,28 +45,28 @@ install(
     DESTINATION "kode"
 )
 
-file(GLOB SO_WINS_INTEL32_PUS_FILES "so/wins/intel32/pus/*.a")
+file(GLOB SO_WINS_32_PUS_FILES "so/wins/32/pus/*.a")
 install(
-    FILES ${SO_WINS_INTEL32_PUS_FILES}
-    DESTINATION "so/wins/intel32/pus"
+    FILES ${SO_WINS_32_PUS_FILES}
+    DESTINATION "so/wins/32/pus"
 )
 
-file(GLOB SO_WIS_INTEL64_PUS_FILES "so/wins/intel64/pus/*.a")
+file(GLOB SO_WINS_64_PUS_FILES "so/wins/64/pus/*.a")
 install(
-    FILES ${SO_WINS_INTEL64_PUS_FILES}
-    DESTINATION "so/wins/intel64/pus"
+    FILES ${SO_WINS_64_PUS_FILES}
+    DESTINATION "so/wins/64/pus"
 )
 
-file(GLOB SO_WINS_INTEL32_FILES "so/wins/intel32/*.exe" "so/wins/intel32/*.dll")
+file(GLOB SO_WINS_32_FILES "so/wins/32/*.exe" "so/wins/32/*.dll")
 install(
-    FILES ${SO_WINS_INTEL32_FILES}
-    DESTINATION "so/wins/intel32"
+    FILES ${SO_WINS_32_FILES}
+    DESTINATION "so/wins/32"
 )
 
-file(GLOB SO_WINS_INTEL64_FILES "so/wins/intel64/*.exe" "so/wins/intel64/*.dll")
+file(GLOB SO_WINS_64_FILES "so/wins/64/*.exe" "so/wins/64/*.dll")
 install(
-    FILES ${SO_WINS_INTEL64_FILES}
-    DESTINATION "so/wins/intel64"
+    FILES ${SO_WINS_64_FILES}
+    DESTINATION "so/wins/64"
 )
 
 install(

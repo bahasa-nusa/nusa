@@ -7,7 +7,7 @@ const Target *set_target(const char *so, const char *arsitektur) {
   current_target.so = so;
   current_target.arsitektur = arsitektur;
 
-  if (strcmp(arsitektur, "intel64") == 0) {
+  if (strcmp(arsitektur, "64") == 0) {
     current_target.is_64 = 1;
     if (strcmp(so, "wins") == 0) {
       current_target.reg[0] = "%rcx";

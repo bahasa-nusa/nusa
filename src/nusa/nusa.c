@@ -34,8 +34,8 @@ void cetak_info() {
   printf("  linux\n\n");
 
   printf("Arsitektur:\n");
-  printf("  intel64\n");
-  printf("  intel32\n");
+  printf("  64\n");
+  printf("  32\n");
 }
 
 static char *salin(const char *s) {
@@ -239,9 +239,9 @@ int main(int argc, char **argv) {
             printf("<sistem-operasi> saat ini hanya mendukung 'wins' atau 'linux'\n");
             return 1;
           }
-          if (strcmp(arg.arsitektur, "intel64") != 0 &&
-              strcmp(arg.arsitektur, "intel32") != 0) {
-            printf("<arsitektur> saat ini hanya mendukung 'intel64' atau 'intel32'\n");
+          if (strcmp(arg.arsitektur, "64") != 0 &&
+              strcmp(arg.arsitektur, "32") != 0) {
+            printf("<arsitektur> saat ini hanya mendukung '64' atau '32'\n");
             return 1;
           }
           set_target(arg.so, arg.arsitektur);
