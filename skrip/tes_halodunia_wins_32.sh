@@ -1,5 +1,5 @@
 #!/bin/sh
-./gubah.sh
+./skrip/gubah.sh
 
 ./build/nusa.exe rkt wins 32 contoh/halodunia.ns halodunia.s
 
