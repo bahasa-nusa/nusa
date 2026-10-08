@@ -30,12 +30,12 @@ void cetak_info() {
   printf("  rkt <sistem-operasi> <arsitektur> <berkas> [<berkas-keluar>]  Bahasa rakitan.\n\n");
 
   printf("Sistem Operasi:\n");
-  printf("  windows\n");
+  printf("  wins\n");
   printf("  linux\n\n");
 
   printf("Arsitektur:\n");
-  printf("  intel_64\n");
-  printf("  intel_32\n");
+  printf("  intel64\n");
+  printf("  intel32\n");
 }
 
 static char *salin(const char *s) {
@@ -235,15 +235,13 @@ int main(int argc, char **argv) {
                    "<arsitektur>\n");
             return 1;
           }
-          if (strcmp(arg.so, "windows") != 0 && strcmp(arg.so, "linux") != 0) {
-            printf("<sistem-operasi> saat ini hanya mendukung 'windows' atau "
-                   "'linux'\n");
+          if (strcmp(arg.so, "wins") != 0 && strcmp(arg.so, "linux") != 0) {
+            printf("<sistem-operasi> saat ini hanya mendukung 'wins' atau 'linux'\n");
             return 1;
           }
-          if (strcmp(arg.arsitektur, "intel_64") != 0 &&
-              strcmp(arg.arsitektur, "intel_32") != 0) {
-            printf("<arsitektur> saat ini hanya mendukung 'intel_64' atau "
-                   "'intel_32'\n");
+          if (strcmp(arg.arsitektur, "intel64") != 0 &&
+              strcmp(arg.arsitektur, "intel32") != 0) {
+            printf("<arsitektur> saat ini hanya mendukung 'intel64' atau 'intel32'\n");
             return 1;
           }
           set_target(arg.so, arg.arsitektur);

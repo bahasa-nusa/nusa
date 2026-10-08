@@ -1,18 +1,18 @@
 #!/bin/sh
 ./build.sh
 
-./build/nusa.exe rkt windows intel_64 contoh/halodunia.ns halodunia.s
+./build/nusa.exe rkt wins intel32 contoh/halodunia.ns halodunia.s
 
-./so/wins/intel64/as.exe -c halodunia.s -o halodunia.o
-./so/wins/intel64/as.exe -c cetak_tergantung_os_dan_arsitektur_ns.s -o cetak_tergantung_os_dan_arsitektur_ns.o
+./so/wins/intel32/as.exe -c halodunia.s -o halodunia.o
+./so/wins/intel32/as.exe -c cetak_tergantung_os_dan_arsitektur_ns.s -o cetak_tergantung_os_dan_arsitektur_ns.o
 
-./so/wins/intel64/ld.exe \
+./so/wins/intel32/ld.exe \
     -e titik_masuk \
     --subsystem console \
     halodunia.o \
     cetak_tergantung_os_dan_arsitektur_ns.o \
-    ./so/wins/intel64/pus/std.a \
-    -L./so/wins/intel64/pus \
+    ./so/wins/intel32/pus/std.a \
+    -L./so/wins/intel32/pus \
     -lkernel32 \
     -o halodunia.exe
 

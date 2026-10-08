@@ -155,11 +155,11 @@ const char *penolek(const char *isi, Tolek *hasil) {
       return isi + 3;
     }
 
-    if (strncmp(isi, "windows", 7) == 0 && batas_kata_kunci(isi, 7)) {
+    if (strncmp(isi, "wins", 4) == 0 && batas_kata_kunci(isi, 4)) {
       hasil->tipe = TIPE_TOLEK_SO_WINDOWS;
       hasil->teks = awal;
-      hasil->panjang = 7;
-      return isi + 7;
+      hasil->panjang = 4;
+      return isi + 4;
     }
 
     if (strncmp(isi, "linux", 5) == 0 && batas_kata_kunci(isi, 5)) {
@@ -169,18 +169,18 @@ const char *penolek(const char *isi, Tolek *hasil) {
       return isi + 5;
     }
 
-    if (strncmp(isi, "intel_32", 8) == 0 && batas_kata_kunci(isi, 8)) {
+    if (strncmp(isi, "intel32", 7) == 0 && batas_kata_kunci(isi, 7)) {
       hasil->tipe = TIPE_TOLEK_ARS_INTEL_32;
       hasil->teks = awal;
-      hasil->panjang = 8;
-      return isi + 8;
+      hasil->panjang = 7;
+      return isi + 7;
     }
 
-    if (strncmp(isi, "intel_64", 8) == 0 && batas_kata_kunci(isi, 8)) {
+    if (strncmp(isi, "intel64", 7) == 0 && batas_kata_kunci(isi, 7)) {
       hasil->tipe = TIPE_TOLEK_ARS_INTEL_64;
       hasil->teks = awal;
-      hasil->panjang = 8;
-      return isi + 8;
+      hasil->panjang = 7;
+      return isi + 7;
     }
 
     while (*isi && (isalnum((unsigned char)*isi) || *isi == '_'))

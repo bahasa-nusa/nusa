@@ -19,7 +19,7 @@ static const char *register_argumen(int i) {
 static void cetak_simbol(FILE *out, const InstruksiRA *cur) {
   const Target *t = get_target();
 
-  if (strcmp(t->so, "windows") == 0 && !t->is_64) {
+  if (strcmp(t->so, "wins") == 0 && !t->is_64) {
     fprintf(out, "_%s", cur->nama);
   } else {
     fprintf(out, "%s", cur->nama);
@@ -27,7 +27,7 @@ static void cetak_simbol(FILE *out, const InstruksiRA *cur) {
 
   if (cur->eks)
     return;
-  if (cur->pub && strcmp(t->so, "windows") == 0)
+  if (cur->pub && strcmp(t->so, "wins") == 0)
     fprintf(out, "_pub");
 }
 

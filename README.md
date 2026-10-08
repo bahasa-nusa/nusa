@@ -27,9 +27,9 @@ Terdapat 3 skrip yang tersedia di direktori utama:
    - **Cara jalankan:** `./build.sh`
    - **Output:** Menghasilkan direktori `build/` berisi biner utama kompilator `nusa` (atau `nusa.exe` di Windows).
 
-2. **`tes_halodunia_windows_intel_32.sh`** dan **`tes_halodunia_windows_intel_64.sh`**
-   - **Fungsi:** Menjalankan siklus lengkap—mengompilasi kompilator Nusa lewat `build.sh`, menguji kompilasi file sumber `.ns` (seperti `halodunia.ns`), merakit objek, membersihkan file sementara, dan menjalankan eksekusi akhir. Versi 32-bit memakai toolchain `so/windows/intel_32`, versi 64-bit memakai `so/windows/intel_64`.
-   - **Cara jalankan:** `./tes_halodunia_windows_intel_32.sh` atau `./tes_halodunia_windows_intel_64.sh`
+2. **`tes_halodunia_wins_intel32.sh`** dan **`tes_halodunia_wins_intel64.sh`**
+   - **Fungsi:** Menjalankan siklus lengkap—mengompilasi kompilator Nusa lewat `build.sh`, menguji kompilasi file sumber `.ns` (seperti `halodunia.ns`), merakit objek, membersihkan file sementara, dan menjalankan eksekusi akhir. Versi 32-bit memakai toolchain `so/wins/intel32`, versi 64-bit memakai `so/wins/intel64`.
+   - **Cara jalankan:** `./tes_halodunia_wins_intel32.sh` atau `./tes_halodunia_wins_intel64.sh`
    - **Output:** Eksekusi program contoh `halodunia.exe` yang langsung dijalankan otomatis setelah proses build selesai.
 
 ## Cara Install
@@ -69,12 +69,12 @@ Perintah:
   rkt <sistem-operasi> <arsitektur> <berkas> [<berkas-keluar>]  Bahasa rakitan.
 
 Sistem Operasi:
-  windows
+  wins
   linux
 
 Arsitektur:
-  intel_64
-  intel_32
+  intel64
+  intel32
 
 ```
 
@@ -88,7 +88,7 @@ Berkas 1: halodunia.ns (titik masuk)
 ```
 
 ```text
-$ nusa rkt windows intel_64 halodunia.ns
+$ nusa rkt wins intel64 halodunia.ns
 Bahasa Rakitan (RKT):
 ...
 ```

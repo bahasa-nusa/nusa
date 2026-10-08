@@ -282,33 +282,29 @@ static void mangle(const InstruksiRA *daftar) {
 
 static bool blok_cocok(const PSA *blok, const char *so,
                        const char *arsitektur) {
+  bool ada_so = false;
+  bool ada_ars = false;
   bool so_cocok = false;
   bool arsitektur_cocok = false;
 
   for (int i = 0; i < blok->jumlah_anak; i++) {
-    switch (blok->anak[i]->tipe) {
-    case PSA_SO_WINDOWS:
-      if (strcmp(so, "windows") == 0)
+    TipePSA t = blok->anak[i]->tipe;
+    if (t == PSA_SO_WINDOWS || t == PSA_SO_LINUX) {
+      ada_so = true;
+      if (t == PSA_SO_WINDOWS && strcmp(so, "wins") == 0)
         so_cocok = true;
-      break;
-    case PSA_SO_LINUX:
-      if (strcmp(so, "linux") == 0)
+      else if (t == PSA_SO_LINUX && strcmp(so, "linux") == 0)
         so_cocok = true;
-      break;
-    case PSA_ARS_INTEL_32:
-      if (strcmp(arsitektur, "intel_32") == 0)
+    } else if (t == PSA_ARS_INTEL_32 || t == PSA_ARS_INTEL_64) {
+      ada_ars = true;
+      if (t == PSA_ARS_INTEL_32 && strcmp(arsitektur, "intel32") == 0)
         arsitektur_cocok = true;
-      break;
-    case PSA_ARS_INTEL_64:
-      if (strcmp(arsitektur, "intel_64") == 0)
+      else if (t == PSA_ARS_INTEL_64 && strcmp(arsitektur, "intel64") == 0)
         arsitektur_cocok = true;
-      break;
-    default:
-      break;
     }
   }
 
-  return so_cocok && arsitektur_cocok;
+  return (!ada_so || so_cocok) && (!ada_ars || arsitektur_cocok);
 }
 
 static void ambil_anak(const PSA *induk, const char *so, const char *arsitektur,

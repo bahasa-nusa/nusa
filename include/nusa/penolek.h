@@ -17,10 +17,10 @@ typedef enum {
   TIPE_TOLEK_KATA_KUNCI_PUBLIK,    // pub
   TIPE_TOLEK_TIPE_DATA_BILANGAN,   // b32
   TIPE_TOLEK_TIPE_DATA_UNTAIAN,    // unt
-  TIPE_TOLEK_SO_WINDOWS,           // windows
+  TIPE_TOLEK_SO_WINDOWS,           // wins
   TIPE_TOLEK_SO_LINUX,             // linux
-  TIPE_TOLEK_ARS_INTEL_32,         // intel_32
-  TIPE_TOLEK_ARS_INTEL_64,         // intel_64
+  TIPE_TOLEK_ARS_INTEL_32,         // intel32
+  TIPE_TOLEK_ARS_INTEL_64,         // intel64
   TIPE_TOLEK_KOMA,                 // ,
   TIPE_TOLEK_KURUNG_KURAWAT_BUKA,  // {
   TIPE_TOLEK_KURUNG_KURAWAT_TUTUP, // }
