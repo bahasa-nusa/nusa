@@ -61,7 +61,7 @@ Penggunaan: nusa <perintah> [berkas]
 Perintah:
   versi                                                         Untuk melihat versi.
   info                                                          Untuk melihat informasi penggunaan.
-  nolek <berkas>                                                Analisis tolek.
+  leks <berkas>                                                 Analisis leksim.
   urai <berkas>                                                 Penguraian pohon sintaksis abstrak (PSA).
   smtk <berkas>                                                 Pemeriksaan semantik.
   ra <sistem-operasi> <arsitektur> <berkas>                     Representasi antara.
@@ -81,8 +81,8 @@ Arsitektur:
 Contoh keluaran:
 
 ```text
-$ nusa nolek halodunia.ns
-Nolek:
+$ nusa leks halodunia.ns
+Leksim:
 Berkas 1: halodunia.ns (titik masuk)
 ...
 ```

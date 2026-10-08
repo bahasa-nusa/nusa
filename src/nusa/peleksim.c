@@ -1,7 +1,7 @@
 // Copyright 2026 Pengembang Bahasa Pemrograman Nusa
 // SPDX-License-Identifier: Apache-2.0
 
-#include "nusa/penolek.h"
+#include "nusa/peleksim.h"
 #include <ctype.h>
 #include <stdbool.h>
 #include <string.h>
@@ -12,53 +12,53 @@ static bool batas_kata_kunci(const char *p, int panjang) {
          c == '{' || c == '}' || c == ',';
 }
 
-const char *nama_tolek(TipeTolek tipe) {
+const char *nama_leksim(TipeLeksim tipe) {
   switch (tipe) {
-  case TIPE_TOLEK_AKHIR:
+  case TIPE_LEKSIM_AKHIR:
     return "AKHIR";
-  case TIPE_TOLEK_KOMENTAR:
+  case TIPE_LEKSIM_KOMENTAR:
     return "COMMENT";
-  case TIPE_TOLEK_NILAI_UNTAIAN:
+  case TIPE_LEKSIM_NILAI_UNTAIAN:
     return "NILAI UNTAIAN";
-  case TIPE_TOLEK_NILAI_BILANGAN:
+  case TIPE_LEKSIM_NILAI_BILANGAN:
     return "NILAI BILANGAN";
-  case TIPE_TOLEK_PENGENAL:
+  case TIPE_LEKSIM_PENGENAL:
     return "PENGENAL";
-  case TIPE_TOLEK_KURUNG_BULAT_BUKA:
+  case TIPE_LEKSIM_KURUNG_BULAT_BUKA:
     return "KURUNG BULAT BUKA";
-  case TIPE_TOLEK_KURUNG_BULAT_TUTUP:
+  case TIPE_LEKSIM_KURUNG_BULAT_TUTUP:
     return "KURUNG BULAT TUTUP";
-  case TIPE_TOLEK_KATA_KUNCI_EKSTERNAL:
+  case TIPE_LEKSIM_KATA_KUNCI_EKSTERNAL:
     return "KATA KUNCI EKSTERNAL";
-  case TIPE_TOLEK_KATA_KUNCI_PUBLIK:
+  case TIPE_LEKSIM_KATA_KUNCI_PUBLIK:
     return "KATA KUNCI PUBLIK";
-  case TIPE_TOLEK_TIPE_DATA_BILANGAN:
+  case TIPE_LEKSIM_TIPE_DATA_BILANGAN:
     return "TIPE DATA B32";
-  case TIPE_TOLEK_TIPE_DATA_UNTAIAN:
+  case TIPE_LEKSIM_TIPE_DATA_UNTAIAN:
     return "TIPE DATA UNTAIAN";
-  case TIPE_TOLEK_KOMA:
+  case TIPE_LEKSIM_KOMA:
     return "KOMA";
-  case TIPE_TOLEK_KURUNG_KURAWAT_BUKA:
+  case TIPE_LEKSIM_KURUNG_KURAWAT_BUKA:
     return "KURUNG KURAWAT BUKA";
-  case TIPE_TOLEK_KURUNG_KURAWAT_TUTUP:
+  case TIPE_LEKSIM_KURUNG_KURAWAT_TUTUP:
     return "KURUNG KURAWAT TUTUP";
-  case TIPE_TOLEK_OPERASI_ISI:
+  case TIPE_LEKSIM_OPERASI_ISI:
     return "OPERASI ISI";
-  case TIPE_TOLEK_TIPE_DATA_MUAT:
+  case TIPE_LEKSIM_TIPE_DATA_MUAT:
     return "TIPE DATA MUAT";
-  case TIPE_TOLEK_TITIK:
+  case TIPE_LEKSIM_TITIK:
     return "TITIK";
   default:
     return "TIDAK DIKETAHUI";
   }
 }
 
-const char *penolek(const char *isi, Tolek *hasil) {
+const char *peleksim(const char *isi, Leksim *hasil) {
   while (*isi && isspace((unsigned char)*isi) && *isi != '\n')
     isi++;
 
   if (!*isi) {
-    hasil->tipe = TIPE_TOLEK_AKHIR;
+    hasil->tipe = TIPE_LEKSIM_AKHIR;
     hasil->teks = isi;
     hasil->panjang = 0;
     return isi;
@@ -66,14 +66,14 @@ const char *penolek(const char *isi, Tolek *hasil) {
 
   if (*isi == '\n') {
     isi++;
-    return penolek(isi, hasil);
+    return peleksim(isi, hasil);
   }
 
   if (*isi == '#') {
     const char *awal = isi;
     while (*isi && *isi != '\n' && *isi != '\r')
       isi++;
-    hasil->tipe = TIPE_TOLEK_KOMENTAR;
+    hasil->tipe = TIPE_LEKSIM_KOMENTAR;
     hasil->teks = awal;
     hasil->panjang = (int)(isi - awal);
     return isi;
@@ -87,7 +87,7 @@ const char *penolek(const char *isi, Tolek *hasil) {
     if (*isi == quote)
       isi++;
 
-    hasil->tipe = TIPE_TOLEK_NILAI_UNTAIAN;
+    hasil->tipe = TIPE_LEKSIM_NILAI_UNTAIAN;
     hasil->teks = awal;
     hasil->panjang = (int)(isi - awal);
     return isi;
@@ -97,7 +97,7 @@ const char *penolek(const char *isi, Tolek *hasil) {
     const char *awal = isi;
     while (*isi && isdigit((unsigned char)*isi))
       isi++;
-    hasil->tipe = TIPE_TOLEK_NILAI_BILANGAN;
+    hasil->tipe = TIPE_LEKSIM_NILAI_BILANGAN;
     hasil->teks = awal;
     hasil->panjang = (int)(isi - awal);
     return isi;
@@ -109,7 +109,7 @@ const char *penolek(const char *isi, Tolek *hasil) {
     if (strncmp(isi, "eks", 3) == 0 &&
         (isi[3] == '\0' || isspace((unsigned char)isi[3]) || isi[3] == '(' ||
          isi[3] == ')')) {
-      hasil->tipe = TIPE_TOLEK_KATA_KUNCI_EKSTERNAL;
+      hasil->tipe = TIPE_LEKSIM_KATA_KUNCI_EKSTERNAL;
       hasil->teks = awal;
       hasil->panjang = 3;
       return isi + 3;
@@ -118,7 +118,7 @@ const char *penolek(const char *isi, Tolek *hasil) {
     if (strncmp(isi, "pub", 3) == 0 &&
         (isi[3] == '\0' || isspace((unsigned char)isi[3]) || isi[3] == '(' ||
          isi[3] == ')')) {
-      hasil->tipe = TIPE_TOLEK_KATA_KUNCI_PUBLIK;
+      hasil->tipe = TIPE_LEKSIM_KATA_KUNCI_PUBLIK;
       hasil->teks = awal;
       hasil->panjang = 3;
       return isi + 3;
@@ -127,21 +127,21 @@ const char *penolek(const char *isi, Tolek *hasil) {
     if (strncmp(isi, "unt", 3) == 0 &&
         (isi[3] == '\0' || isspace((unsigned char)isi[3]) || isi[3] == '(' ||
          isi[3] == ')')) {
-      hasil->tipe = TIPE_TOLEK_TIPE_DATA_UNTAIAN;
+      hasil->tipe = TIPE_LEKSIM_TIPE_DATA_UNTAIAN;
       hasil->teks = awal;
       hasil->panjang = 3;
       return isi + 3;
     }
 
     if (strncmp(isi, "muat", 4) == 0 && batas_kata_kunci(isi, 4)) {
-      hasil->tipe = TIPE_TOLEK_TIPE_DATA_MUAT;
+      hasil->tipe = TIPE_LEKSIM_TIPE_DATA_MUAT;
       hasil->teks = awal;
       hasil->panjang = 4;
       return isi + 4;
     }
 
     if (strncmp(isi, "b32", 3) == 0 && batas_kata_kunci(isi, 3)) {
-      hasil->tipe = TIPE_TOLEK_TIPE_DATA_BILANGAN;
+      hasil->tipe = TIPE_LEKSIM_TIPE_DATA_BILANGAN;
       hasil->teks = awal;
       hasil->panjang = 3;
       return isi + 3;
@@ -149,7 +149,7 @@ const char *penolek(const char *isi, Tolek *hasil) {
 
     while (*isi && (isalnum((unsigned char)*isi) || *isi == '_'))
       isi++;
-    hasil->tipe = TIPE_TOLEK_PENGENAL;
+    hasil->tipe = TIPE_LEKSIM_PENGENAL;
     hasil->teks = awal;
     hasil->panjang = (int)(isi - awal);
     return isi;
@@ -159,62 +159,62 @@ const char *penolek(const char *isi, Tolek *hasil) {
     const char *awal = isi;
     while (*isi && (isalnum((unsigned char)*isi) || *isi == '_'))
       isi++;
-    hasil->tipe = TIPE_TOLEK_PENGENAL;
+    hasil->tipe = TIPE_LEKSIM_PENGENAL;
     hasil->teks = awal;
     hasil->panjang = (int)(isi - awal);
     return isi;
   }
 
   if (*isi == '(') {
-    hasil->tipe = TIPE_TOLEK_KURUNG_BULAT_BUKA;
+    hasil->tipe = TIPE_LEKSIM_KURUNG_BULAT_BUKA;
     hasil->teks = isi;
     hasil->panjang = 1;
     return isi + 1;
   }
 
   if (*isi == ')') {
-    hasil->tipe = TIPE_TOLEK_KURUNG_BULAT_TUTUP;
+    hasil->tipe = TIPE_LEKSIM_KURUNG_BULAT_TUTUP;
     hasil->teks = isi;
     hasil->panjang = 1;
     return isi + 1;
   }
 
   if (*isi == '{') {
-    hasil->tipe = TIPE_TOLEK_KURUNG_KURAWAT_BUKA;
+    hasil->tipe = TIPE_LEKSIM_KURUNG_KURAWAT_BUKA;
     hasil->teks = isi;
     hasil->panjang = 1;
     return isi + 1;
   }
 
   if (*isi == '}') {
-    hasil->tipe = TIPE_TOLEK_KURUNG_KURAWAT_TUTUP;
+    hasil->tipe = TIPE_LEKSIM_KURUNG_KURAWAT_TUTUP;
     hasil->teks = isi;
     hasil->panjang = 1;
     return isi + 1;
   }
 
   if (*isi == ',') {
-    hasil->tipe = TIPE_TOLEK_KOMA;
+    hasil->tipe = TIPE_LEKSIM_KOMA;
     hasil->teks = isi;
     hasil->panjang = 1;
     return isi + 1;
   }
 
   if (*isi == '=') {
-    hasil->tipe = TIPE_TOLEK_OPERASI_ISI;
+    hasil->tipe = TIPE_LEKSIM_OPERASI_ISI;
     hasil->teks = isi;
     hasil->panjang = 1;
     return isi + 1;
   }
 
   if (*isi == '.') {
-    hasil->tipe = TIPE_TOLEK_TITIK;
+    hasil->tipe = TIPE_LEKSIM_TITIK;
     hasil->teks = isi;
     hasil->panjang = 1;
     return isi + 1;
   }
 
-  hasil->tipe = TIPE_TOLEK_TIDAK_DIKETAHUI;
+  hasil->tipe = TIPE_LEKSIM_TIDAK_DIKETAHUI;
   hasil->teks = isi;
   hasil->panjang = 1;
   return isi + 1;

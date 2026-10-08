@@ -1,8 +1,8 @@
 // Copyright 2026 Pengembang Bahasa Pemrograman Nusa
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef NUSA_PENOLEKSIM_H
-#define NUSA_PENOLEKSIM_H
+#ifndef NUSA_PELEKSIM_H
+#define NUSA_PELEKSIM_H
 
 typedef enum {
   TIPE_LEKSIM_AKHIR,

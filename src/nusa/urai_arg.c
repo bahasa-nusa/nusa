@@ -11,8 +11,8 @@ Arg urai_arg(int argc, char **argv) {
       args.versi = true;
     } else if (strcmp(argv[i], "info") == 0) {
       args.info = true;
-    } else if (strcmp(argv[i], "nolek") == 0) {
-      args.nolek = true;
+    } else if (strcmp(argv[i], "leks") == 0) {
+      args.leks = true;
     } else if (strcmp(argv[i], "urai") == 0) {
       args.urai = true;
     } else if (strcmp(argv[i], "smtk") == 0) {

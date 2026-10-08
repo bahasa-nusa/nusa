@@ -10,7 +10,7 @@ typedef struct {
   bool versi;
   bool info;
   const char *berkas_masuk;
-  bool nolek;
+  bool leks;
   bool urai;
   bool smtk;
   bool ra;

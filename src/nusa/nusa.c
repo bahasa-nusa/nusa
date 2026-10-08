@@ -10,7 +10,7 @@
 #include "nusa/rkt.h"
 #include "nusa/optimasi.h"
 #include "nusa/pengurai.h"
-#include "nusa/penolek.h"
+#include "nusa/peleksim.h"
 #include "nusa/pesemantik.h"
 #include "nusa/target.h"
 
@@ -22,7 +22,7 @@ void cetak_info() {
   printf("Perintah:\n");
   printf("  versi                                                         Untuk melihat versi.\n");
   printf("  info                                                          Untuk melihat informasi penggunaan.\n");
-  printf("  nolek <berkas>                                                Analisis tolek.\n");
+  printf("  leks <berkas>                                                 Analisis leksim.\n");
   printf("  urai <berkas>                                                 Penguraian pohon sintaksis abstrak (PSA).\n");
   printf("  smtk <berkas>                                                 Pemeriksaan semantik.\n");
   printf("  ra <sistem-operasi> <arsitektur> <berkas>                     Representasi antara.\n");
@@ -59,7 +59,7 @@ typedef struct InfoBer {
 
 static InfoBer *daftar_info = NULL;
 
-static void kumpul_tolek(const char *isi, const char *jalur, bool titik_masuk) {
+static void kumpul_leksim(const char *isi, const char *jalur, bool titik_masuk) {
   InfoBer *ib = malloc(sizeof(InfoBer));
   ib->isi = salin(isi);
   ib->jalur = salin(jalur);
@@ -67,22 +67,22 @@ static void kumpul_tolek(const char *isi, const char *jalur, bool titik_masuk) {
   ib->lanjut = NULL;
 
   const char *ptr = isi;
-  Tolek tolek;
+  Leksim leksim;
   bool di_atas = true;
-  while ((ptr = penolek(ptr, &tolek)) && tolek.tipe != TIPE_TOLEK_AKHIR) {
-    if (tolek.tipe == TIPE_TOLEK_KOMENTAR)
+  while ((ptr = peleksim(ptr, &leksim)) && leksim.tipe != TIPE_LEKSIM_AKHIR) {
+    if (leksim.tipe == TIPE_LEKSIM_KOMENTAR)
       continue;
 
-    if (tolek.tipe == TIPE_TOLEK_TIPE_DATA_MUAT && di_atas) {
-      Tolek lanjut;
+    if (leksim.tipe == TIPE_LEKSIM_TIPE_DATA_MUAT && di_atas) {
+      Leksim lanjut;
       const char *ptr_lanjut = ptr;
-      while ((ptr_lanjut = penolek(ptr_lanjut, &lanjut)) &&
-             lanjut.tipe != TIPE_TOLEK_AKHIR) {
-        if (lanjut.tipe == TIPE_TOLEK_KOMENTAR)
+      while ((ptr_lanjut = peleksim(ptr_lanjut, &lanjut)) &&
+             lanjut.tipe != TIPE_LEKSIM_AKHIR) {
+        if (lanjut.tipe == TIPE_LEKSIM_KOMENTAR)
           continue;
-        if (lanjut.tipe == TIPE_TOLEK_PENGENAL)
+        if (lanjut.tipe == TIPE_LEKSIM_PENGENAL)
           continue;
-        if (lanjut.tipe == TIPE_TOLEK_NILAI_UNTAIAN) {
+        if (lanjut.tipe == TIPE_LEKSIM_NILAI_UNTAIAN) {
           int len = lanjut.panjang;
           char quote = lanjut.teks[0];
           if (len >= 2 && (quote == '\'' || quote == '"') &&
@@ -100,7 +100,7 @@ static void kumpul_tolek(const char *isi, const char *jalur, bool titik_masuk) {
                   tandai_berkas_dimuat(res);
                   const char *sub = baca_berkas(res);
                   if (sub) {
-                    kumpul_tolek(sub, res, false);
+                    kumpul_leksim(sub, res, false);
                     bersihkan_berkas(sub);
                   }
                 }
@@ -129,7 +129,7 @@ static void kumpul_tolek(const char *isi, const char *jalur, bool titik_masuk) {
   }
 }
 
-static void cetak_tolek_terkumpul(void) {
+static void cetak_leksim_terkumpul(void) {
   int nomor = 0;
   InfoBer *cur = daftar_info;
   while (cur) {
@@ -141,20 +141,20 @@ static void cetak_tolek_terkumpul(void) {
 
     int max_len = 0;
     const char *ptr = cur->isi;
-    Tolek tolek;
-    while ((ptr = penolek(ptr, &tolek)) && tolek.tipe != TIPE_TOLEK_AKHIR) {
-      if (tolek.panjang > max_len)
-        max_len = tolek.panjang;
+    Leksim leksim;
+    while ((ptr = peleksim(ptr, &leksim)) && leksim.tipe != TIPE_LEKSIM_AKHIR) {
+      if (leksim.panjang > max_len)
+        max_len = leksim.panjang;
     }
     if (max_len < 22)
       max_len = 22;
 
     ptr = cur->isi;
-    while ((ptr = penolek(ptr, &tolek)) && tolek.tipe != TIPE_TOLEK_AKHIR) {
-      printf("%*.*s | %s\n", max_len, tolek.panjang, tolek.teks,
-             nama_tolek(tolek.tipe));
+    while ((ptr = peleksim(ptr, &leksim)) && leksim.tipe != TIPE_LEKSIM_AKHIR) {
+      printf("%*.*s | %s\n", max_len, leksim.panjang, leksim.teks,
+             nama_leksim(leksim.tipe));
     }
-    printf("%*s | %s\n", max_len, "", nama_tolek(TIPE_TOLEK_AKHIR));
+    printf("%*s | %s\n", max_len, "", nama_leksim(TIPE_LEKSIM_AKHIR));
 
     InfoBer *next = cur->lanjut;
     free(cur->isi);
@@ -180,7 +180,7 @@ int main(int argc, char **argv) {
   }
 
   if (arg.berkas_masuk) {
-    if (!arg.nolek && !arg.urai && !arg.smtk && !arg.ra && !arg.opt &&
+    if (!arg.leks && !arg.urai && !arg.smtk && !arg.ra && !arg.opt &&
         !arg.rkt) {
       printf("Argumen tidak valid.\n");
       cetak_info();
@@ -199,13 +199,13 @@ int main(int argc, char **argv) {
       return 1;
     }
 
-    // Nolek
-    if (arg.nolek) {
-      printf("Nolek:\n");
+    // Leksim
+    if (arg.leks) {
+      printf("Leksim:\n");
       bersihkan_daftar_dimuat();
       tandai_berkas_dimuat(arg.berkas_masuk);
-      kumpul_tolek(isi_berkas, arg.berkas_masuk, true);
-      cetak_tolek_terkumpul();
+      kumpul_leksim(isi_berkas, arg.berkas_masuk, true);
+      cetak_leksim_terkumpul();
     }
 
     // PSA (Urai)
