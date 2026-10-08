@@ -1,3 +1,5 @@
 {
     "cmake.enableAutomaticKitScan": false,
+    "cmake.configureOnOpen": false,
+    "cmake.configureOnEdit": false
 }
