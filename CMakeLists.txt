@@ -45,31 +45,20 @@ install(
     DESTINATION "kode"
 )
 
-file(GLOB SO_WINS_32_PUS_FILES "so/wins/32/pus/*.a")
 install(
-    FILES ${SO_WINS_32_PUS_FILES}
-    DESTINATION "so/wins/32/pus"
+    DIRECTORY so/wins/32/
+    DESTINATION so/wins/32
 )
 
-file(GLOB SO_WINS_64_PUS_FILES "so/wins/64/pus/*.a")
 install(
-    FILES ${SO_WINS_64_PUS_FILES}
-    DESTINATION "so/wins/64/pus"
-)
-
-file(GLOB SO_WINS_32_FILES "so/wins/32/*.exe" "so/wins/32/*.dll")
-install(
-    FILES ${SO_WINS_32_FILES}
-    DESTINATION "so/wins/32"
-)
-
-file(GLOB SO_WINS_64_FILES "so/wins/64/*.exe" "so/wins/64/*.dll")
-install(
-    FILES ${SO_WINS_64_FILES}
-    DESTINATION "so/wins/64"
+    DIRECTORY so/wins/64/
+    DESTINATION so/wins/64
 )
 
 install(
     FILES "LICENSE"
     DESTINATION "."
 )
+
+# std.a dari bahasa rakitan
+add_subdirectory(src/std)
