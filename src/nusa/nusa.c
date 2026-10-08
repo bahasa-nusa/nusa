@@ -7,7 +7,6 @@
 #include <string.h>
 
 #include "nusa/berkas.h"
-#include "nusa/rkt.h"
 #include "nusa/optimasi.h"
 #include "nusa/pengurai.h"
 #include "nusa/peleksim.h"
@@ -26,8 +25,7 @@ void cetak_info() {
   printf("  urai <berkas>                                                 Penguraian pohon sintaksis abstrak (PSA).\n");
   printf("  smtk <berkas>                                                 Pemeriksaan semantik.\n");
   printf("  ra <sistem-operasi> <arsitektur> <berkas>                     Representasi antara.\n");
-  printf("  opt <sistem-operasi> <arsitektur> <berkas>                    Optimasi.\n");
-  printf("  rkt <sistem-operasi> <arsitektur> <berkas> [<berkas-keluar>]  Bahasa rakitan.\n\n");
+  printf("  opt <sistem-operasi> <arsitektur> <berkas>                    Optimasi.\n\n");
 
   printf("Sistem Operasi:\n");
   printf("  wins\n");
@@ -180,8 +178,7 @@ int main(int argc, char **argv) {
   }
 
   if (arg.berkas_masuk) {
-    if (!arg.leks && !arg.urai && !arg.smtk && !arg.ra && !arg.opt &&
-        !arg.rkt) {
+    if (!arg.leks && !arg.urai && !arg.smtk && !arg.ra && !arg.opt) {
       printf("Argumen tidak valid.\n");
       cetak_info();
       return 1;
@@ -209,7 +206,7 @@ int main(int argc, char **argv) {
     }
 
     // PSA (Urai)
-    if (arg.urai || arg.smtk || arg.ra || arg.opt || arg.rkt) {
+    if (arg.urai || arg.smtk || arg.ra || arg.opt) {
       if (arg.urai) {
         printf("PSA:\n");
       }
@@ -229,9 +226,9 @@ int main(int argc, char **argv) {
           else
             return 1;
         }
-        if (arg.ra || arg.opt || arg.rkt) {
+        if (arg.ra || arg.opt) {
           if (!arg.so || !arg.arsitektur) {
-            printf("Perintah ra, opt, atau rkt memerlukan <sistem-operasi> dan "
+            printf("Perintah ra atau opt memerlukan <sistem-operasi> dan "
                    "<arsitektur>\n");
             return 1;
           }
@@ -251,15 +248,12 @@ int main(int argc, char **argv) {
             printf("\nRA:\n");
             cetak_ra_permodul(ra_imp);
           }
-          if (arg.opt || arg.rkt) {
+          if (arg.opt) {
             InstruksiRA *ra_opt = optimalkan(ra);
             InstruksiRA *ra_opt_imp = tambah_impor_ra(ra_opt, ra_opt);
             if (arg.opt) {
               printf("\nOptimasi:\n");
               cetak_ra_permodul(ra_opt_imp);
-            }
-            if (arg.rkt) {
-              bangkitkan_rkt(ra_opt_imp, arg.berkas_keluar);
             }
             bersihkan_ra(ra_imp);
             bersihkan_ra(ra_opt_imp);

@@ -29,18 +29,8 @@ Arg urai_arg(int argc, char **argv) {
         args.so = argv[++i];
         args.arsitektur = argv[++i];
       }
-    } else if (strcmp(argv[i], "rkt") == 0) {
-      args.rkt = true;
-      if (i + 2 < argc) {
-        args.so = argv[++i];
-        args.arsitektur = argv[++i];
-      }
     } else if (argv[i][0] != '-') {
-      if (args.rkt && args.berkas_masuk && !args.berkas_keluar) {
-        args.berkas_keluar = argv[i];
-      } else {
-        args.berkas_masuk = argv[i];
-      }
+      args.berkas_masuk = argv[i];
     }
   }
   return args;
