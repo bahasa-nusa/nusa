@@ -84,3 +84,16 @@ install(
 
 # std.a dari bahasa rakitan
 add_subdirectory(src/std)
+
+# Uji jembat
+add_executable(
+    nusa_uji_jembat
+    src/uji/uji_jembat.c
+    src/nusa/jembat.c
+)
+
+target_include_directories(
+    nusa_uji_jembat
+    PRIVATE
+    "include"
+)
