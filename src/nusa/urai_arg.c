@@ -23,9 +23,8 @@ Arg urai_arg(int argc, char **argv) {
         args.opt = true;
         i++;
       }
-      if (i + 2 < argc) {
-        args.so = argv[++i];
-        args.arsitektur = argv[++i];
+      if (i + 1 < argc) {
+        args.target = argv[++i];
       }
     } else if (strcmp(argv[i], "opt") == 0) {
       // Abaikan opt mandiri

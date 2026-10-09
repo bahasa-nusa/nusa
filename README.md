@@ -59,22 +59,13 @@ $ nusa info
 Penggunaan: nusa <perintah> [berkas]
 
 Perintah:
-  versi                                                         Untuk melihat versi.
-  info                                                          Untuk melihat informasi penggunaan.
-  leks <berkas>                                                 Analisis leksim.
-  urai <berkas>                                                 Penguraian pohon sintaksis abstrak (PSA).
-  smtk <berkas>                                                 Pemeriksaan semantik.
-  ra <sistem-operasi> <arsitektur> <berkas>                     Representasi antara.
-  opt <sistem-operasi> <arsitektur> <berkas>                    Optimasi.
+  versi                       Untuk melihat versi.
+  info                        Untuk melihat informasi penggunaan.
+  leks <berkas>               Analisis leksim.
+  urai <berkas>               Penguraian pohon sintaksis abstrak (PSA).
+  smtk <berkas>               Pemeriksaan semantik.
+  ra [opt] <target> <berkas>  Representasi antara.
 
-Sistem Operasi:
-  wins
-  linux
-
-Arsitektur:
-  64
-  32
-  
 ```
 
 Contoh keluaran:

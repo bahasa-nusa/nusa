@@ -5,14 +5,13 @@
 #define NUSA_TARGET_H
 
 typedef struct {
-  const char *so;
-  const char *arsitektur;
+  const char *target;
   int is_64;
   const char *reg[4];
   int banyak_reg;
 } Target;
 
-const Target *set_target(const char *so, const char *arsitektur);
+const Target *set_target(const char *target);
 const Target *get_target(void);
 
 #endif

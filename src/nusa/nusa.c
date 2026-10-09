@@ -19,20 +19,12 @@ void cetak_info() {
   printf("Penggunaan: nusa <perintah> [berkas]\n\n");
 
   printf("Perintah:\n");
-  printf("  versi                                                         Untuk melihat versi.\n");
-  printf("  info                                                          Untuk melihat informasi penggunaan.\n");
-  printf("  leks <berkas>                                                 Analisis leksim.\n");
-  printf("  urai <berkas>                                                 Penguraian pohon sintaksis abstrak (PSA).\n");
-  printf("  smtk <berkas>                                                 Pemeriksaan semantik.\n");
-  printf("  ra [opt] <sistem-operasi> <arsitektur> <berkas>               Representasi antara.\n\n");
-
-  printf("Sistem Operasi:\n");
-  printf("  wins\n");
-  printf("  linux\n\n");
-
-  printf("Arsitektur:\n");
-  printf("  64\n");
-  printf("  32\n");
+  printf("  versi                       Untuk melihat versi.\n");
+  printf("  info                        Untuk melihat informasi penggunaan.\n");
+  printf("  leks <berkas>               Analisis leksim.\n");
+  printf("  urai <berkas>               Penguraian pohon sintaksis abstrak (PSA).\n");
+  printf("  smtk <berkas>               Pemeriksaan semantik.\n");
+  printf("  ra [opt] <target> <berkas>  Representasi antara.\n");
 }
 
 static char *salin(const char *s) {
@@ -226,21 +218,14 @@ int main(int argc, char **argv) {
             return 1;
         }
         if (arg.ra || arg.opt) {
-          if (!arg.so || !arg.arsitektur) {
-            printf("Perintah ra memerlukan <sistem-operasi> dan "
-                   "<arsitektur>\n");
+          if (!arg.target) {
+            printf("Perintah ra memerlukan <target>\n");
             return 1;
           }
-          if (strcmp(arg.so, "wins") != 0 && strcmp(arg.so, "linux") != 0) {
-            printf("<sistem-operasi> saat ini hanya mendukung 'wins' atau 'linux'\n");
+          const Target *t = set_target(arg.target);
+          if (!t) {
             return 1;
           }
-          if (strcmp(arg.arsitektur, "64") != 0 &&
-              strcmp(arg.arsitektur, "32") != 0) {
-            printf("<arsitektur> saat ini hanya mendukung '64' atau '32'\n");
-            return 1;
-          }
-          set_target(arg.so, arg.arsitektur);
           InstruksiRA *ra = bangkitkan_ra(psa);
           InstruksiRA *ra_imp = tambah_impor_ra(ra, ra);
           if (arg.ra) {

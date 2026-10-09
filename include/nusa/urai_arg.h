@@ -15,8 +15,7 @@ typedef struct {
   bool smtk;
   bool ra;
   bool opt;
-  const char *so;
-  const char *arsitektur;
+  const char *target;
   const char *berkas_keluar;
 } Arg;
 
