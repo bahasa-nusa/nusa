@@ -15,6 +15,7 @@
 - CCache
 - CMake >= 4.4
 - Ninja
+- LLVM >= 22.1.8
 
 ### Fungsi Skrip
 
