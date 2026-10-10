@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <llvm-c/Analysis.h>
 #include <llvm-c/Core.h>
 #include <llvm-c/Target.h>
 #include <llvm-c/TargetMachine.h>
@@ -76,6 +77,8 @@ static LLVMTypeRef ra_tipe_ke_llvm_type(TipeNilaiRA tipe) {
     }
 }
 
+static int global_str_counter = 0;
+
 static char *lepas_untai(const char *s) {
     if (!s) return NULL;
 
@@ -115,10 +118,12 @@ static LLVMValueRef buat_global_string(LLVMModuleRef module, const char *str) {
     size_t len = strlen(str);
     LLVMTypeRef arrayType = LLVMArrayType(LLVMInt8TypeInContext(llvm_context), len + 1);
 
-    LLVMValueRef globalStr = LLVMAddGlobal(module, arrayType, ".str");
+    char name[32];
+    snprintf(name, sizeof(name), ".str%d", global_str_counter++);
+    LLVMValueRef globalStr = LLVMAddGlobal(module, arrayType, name);
     LLVMSetLinkage(globalStr, LLVMPrivateLinkage);
     LLVMSetGlobalConstant(globalStr, true);
-    LLVMSetInitializer(globalStr, LLVMConstStringInContext(llvm_context, str, (unsigned)len, true));
+    LLVMSetInitializer(globalStr, LLVMConstStringInContext(llvm_context, str, (unsigned)len, false));
 
     return globalStr;
 }
@@ -160,7 +165,6 @@ static int bagkang_llvm_jembat(const InstruksiRA *ra, const OpsiBackend *opsi) {
 
         LLVMValueRef f = LLVMAddFunction(module, cur->nama, ft);
         if (cur->eks) {
-            // deklarasi eksternal
             LLVMSetLinkage(f, LLVMExternalLinkage);
         }
     }
@@ -245,10 +249,67 @@ static int bagkang_llvm_jembat(const InstruksiRA *ra, const OpsiBackend *opsi) {
         }
         LLVMDisposeMessage(ir);
     } else if (opsi->bentuk && strcmp(opsi->bentuk, "rkt") == 0) {
-        fprintf(stderr, "Backend ASM belum tersedia\n");
-        LLVMDisposeBuilder(builder);
-        LLVMDisposeModule(module);
-        return -1;
+        if (!opsi->target) {
+            fprintf(stderr, "Target tidak diberikan untuk assembly\n");
+            LLVMDisposeBuilder(builder);
+            LLVMDisposeModule(module);
+            return -1;
+        }
+        LLVMTargetRef target_ref = NULL;
+        char *err = NULL;
+        if (LLVMGetTargetFromTriple(opsi->target, &target_ref, &err) != 0) {
+            fprintf(stderr, "Target tidak didukung LLVM: %s\n", err ? err : "unknown");
+            if (err) LLVMDisposeMessage(err);
+            LLVMDisposeBuilder(builder);
+            LLVMDisposeModule(module);
+            return -1;
+        }
+        const char *cpu = "generic";
+        const char *features = "";
+        LLVMTargetMachineRef tm = LLVMCreateTargetMachine(target_ref, opsi->target, cpu, features,
+            LLVMCodeGenLevelDefault, LLVMRelocDefault, LLVMCodeModelDefault);
+        if (!tm) {
+            fprintf(stderr, "Gagal membuat TargetMachine untuk %s\n", opsi->target);
+            LLVMDisposeBuilder(builder);
+            LLVMDisposeModule(module);
+            return -1;
+        }
+
+        char *verr = NULL;
+        if (LLVMVerifyModule(module, LLVMAbortProcessAction, &verr)) {
+            fprintf(stderr, "Verifikasi modul gagal: %s\n", verr);
+            LLVMDisposeMessage(verr);
+            LLVMDisposeTargetMachine(tm);
+            LLVMDisposeBuilder(builder);
+            LLVMDisposeModule(module);
+            return -1;
+        }
+        
+        if (opsi->berkas_keluar) {
+            if (LLVMTargetMachineEmitToFile(tm, module, (char *)opsi->berkas_keluar, LLVMAssemblyFile, &err) != 0) {
+                fprintf(stderr, "Gagal menulis assembly ke berkas: %s\n", err ? err : "unknown");
+                if (err) LLVMDisposeMessage(err);
+                LLVMDisposeTargetMachine(tm);
+                LLVMDisposeBuilder(builder);
+                LLVMDisposeModule(module);
+                return -1;
+            }
+        } else {
+            LLVMMemoryBufferRef outbuf = NULL;
+            if (LLVMTargetMachineEmitToMemoryBuffer(tm, module, LLVMAssemblyFile, &err, &outbuf) != 0) {
+                fprintf(stderr, "Gagal menghasilkan assembly: %s\n", err ? err : "unknown");
+                if (err) LLVMDisposeMessage(err);
+                LLVMDisposeTargetMachine(tm);
+                LLVMDisposeBuilder(builder);
+                LLVMDisposeModule(module);
+                return -1;
+            }
+            size_t size = LLVMGetBufferSize(outbuf);
+            const char *data = LLVMGetBufferStart(outbuf);
+            fwrite(data, 1, size, stdout);
+            LLVMDisposeMemoryBuffer(outbuf);
+        }
+        LLVMDisposeTargetMachine(tm);
     }
 
     LLVMDisposeBuilder(builder);
