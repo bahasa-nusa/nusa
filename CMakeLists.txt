@@ -31,6 +31,12 @@ add_definitions(${LLVM_DEFINITIONS_LIST})
 
 llvm_map_components_to_libnames(llvm_libs support core all)
 
+# lld
+find_package(LLD REQUIRED CONFIG)
+
+message(STATUS "Found LLD ${LLD_VERSION}")
+message(STATUS "Using LLDConfig.cmake in: ${LLD_DIR}")
+
 # nusa
 file(
     GLOB_RECURSE
@@ -48,12 +54,19 @@ target_include_directories(
     PRIVATE
     "include"
     ${LLVM_INCLUDE_DIRS}
+    ${LLD_INCLUDE_DIRS}
 )
 
 target_link_libraries(
     nusa
     PRIVATE
     LLVM
+    lldCommon
+    lldCOFF
+    lldELF
+    lldMachO
+    lldMinGW
+    lldWasm
 )
 
 # install
