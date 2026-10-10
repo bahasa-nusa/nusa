@@ -26,10 +26,24 @@ Arg urai_arg(int argc, char **argv) {
       if (i + 1 < argc) {
         args.target = argv[++i];
       }
-    } else if (strcmp(argv[i], "opt") == 0) {
-      // Abaikan opt mandiri
+    } else if (strcmp(argv[i], "llvm") == 0) {
+      args.llvm = true;
+      if (i + 1 < argc && strcmp(argv[i + 1], "opt") == 0) {
+        args.opt = true;
+        i++;
+      }
+      if (i + 1 < argc && (strcmp(argv[i + 1], "ra") == 0 || strcmp(argv[i + 1], "rkt") == 0)) {
+        args.bentuk = argv[++i];
+      }
+      if (i + 1 < argc) {
+        args.target = argv[++i];
+      }
     } else if (argv[i][0] != '-') {
-      args.berkas_masuk = argv[i];
+      if (!args.berkas_masuk) {
+        args.berkas_masuk = argv[i];
+      } else if (!args.berkas_keluar) {
+        args.berkas_keluar = argv[i];
+      }
     }
   }
   return args;

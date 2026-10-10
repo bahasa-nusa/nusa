@@ -14,17 +14,20 @@
 #include "nusa/target.h"
 
 #include "nusa/urai_arg.h"
+#include "nusa/bagkang_llvm.h"
+#include "nusa/jembat.h"
 
 void cetak_info() {
   printf("Penggunaan: nusa <perintah> [berkas]\n\n");
 
   printf("Perintah:\n");
-  printf("  versi                       Untuk melihat versi.\n");
-  printf("  info                        Untuk melihat informasi penggunaan.\n");
-  printf("  leks <berkas>               Analisis leksim.\n");
-  printf("  urai <berkas>               Penguraian pohon sintaksis abstrak (PSA).\n");
-  printf("  smtk <berkas>               Pemeriksaan semantik.\n");
-  printf("  ra [opt] <target> <berkas>  Representasi antara.\n");
+  printf("  versi                                                    Untuk melihat versi.\n");
+  printf("  info                                                     Untuk melihat informasi penggunaan.\n");
+  printf("  leks <berkas>                                            Analisis leksim.\n");
+  printf("  urai <berkas>                                            Penguraian pohon sintaksis abstrak (PSA).\n");
+  printf("  smtk <berkas>                                            Pemeriksaan semantik.\n");
+  printf("  ra [opt] <target> <berkas>                               Representasi antara.\n");
+  printf("  llvm [opt] <ra|rkt> <target> <berkas> [<berkas-keluar>]  Backend LLVM.\n");
 }
 
 static char *salin(const char *s) {
@@ -169,7 +172,7 @@ int main(int argc, char **argv) {
   }
 
   if (arg.berkas_masuk) {
-    if (!arg.leks && !arg.urai && !arg.smtk && !arg.ra && !arg.opt) {
+    if (!arg.leks && !arg.urai && !arg.smtk && !arg.ra && !arg.opt && !arg.llvm) {
       printf("Argumen tidak valid.\n");
       cetak_info();
       return 1;
@@ -197,7 +200,7 @@ int main(int argc, char **argv) {
     }
 
     // PSA (Urai)
-    if (arg.urai || arg.smtk || arg.ra || arg.opt) {
+    if (arg.urai || arg.smtk || arg.ra || arg.opt || arg.llvm) {
       if (arg.urai) {
         printf("PSA:\n");
       }
@@ -243,6 +246,46 @@ int main(int argc, char **argv) {
             }
           }
         }
+
+        // llvm backend
+        if (arg.llvm) {
+          if (!arg.target) {
+            printf("Perintah llvm memerlukan <target>\n");
+            return 1;
+          }
+          if (!arg.bentuk || (strcmp(arg.bentuk, "ra") != 0 && strcmp(arg.bentuk, "rkt") != 0)) {
+            printf("Perintah llvm memerlukan <ra|rkt>\n");
+            return 1;
+          }
+          if (!bagkang_llvm_target_tersedia(arg.target)) {
+            printf("Target tidak didukung LLVM: %s\n", arg.target);
+            return 1;
+          }
+          
+          bagkang_llvm_daftarkan();
+
+          InstruksiRA *ra = bangkitkan_ra(psa);
+          InstruksiRA *ra_imp = tambah_impor_ra(ra, ra);
+          InstruksiRA *ra_opt = optimalkan(ra);
+          InstruksiRA *ra_opt_imp = tambah_impor_ra(ra_opt, ra_opt);
+
+          OpsiBackend opsi = {
+            .optimasi = arg.opt,
+            .so = NULL,
+            .target = arg.target,
+            .bentuk = arg.bentuk,
+            .berkas_keluar = arg.berkas_keluar
+          };
+
+          int hasil = jembat_jalankan("llvm", ra_opt_imp, &opsi);
+          bersihkan_ra(ra_imp);
+          bersihkan_ra(ra_opt_imp);
+
+          if (hasil != 0) {
+            return 1;
+          }
+        }
+        
         bersihkan_psa(psa);
       } else {
         printf("Gagal mengurai: %s\n", pesan_urai());

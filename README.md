@@ -66,6 +66,7 @@ Perintah:
   urai <berkas>               Penguraian pohon sintaksis abstrak (PSA).
   smtk <berkas>               Pemeriksaan semantik.
   ra [opt] <target> <berkas>  Representasi antara.
+  llvm [opt] <ra|rkt> <target> <berkas> [<berkas-keluar>]  Backend LLVM.
 
 ```
 

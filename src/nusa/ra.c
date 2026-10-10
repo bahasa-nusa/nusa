@@ -37,6 +37,7 @@ static void isi_dari_deklarasi(InstruksiRA *ins, const PSA *deklarasi) {
   ins->tipe = RA_FUNGSI;
   ins->nama = salin(deklarasi->teks, deklarasi->panjang);
   ins->jumlah = 0;
+  ins->tipe_kembali = RA_TANPA_TIPE;
   ins->eks = false;
   ins->pub = false;
   ins->modul = NULL;
@@ -47,26 +48,44 @@ static void isi_dari_deklarasi(InstruksiRA *ins, const PSA *deklarasi) {
   ins->nilai = malloc(sizeof(char *) * kapasitas);
   ins->tipe_nilai = malloc(sizeof(TipeNilaiRA) * kapasitas);
 
+  bool menunggu_tipe_param = false;
   for (int i = 0; i < deklarasi->jumlah_anak; i++) {
     const PSA *anak = deklarasi->anak[i];
     if (anak->tipe == PSA_KATA_KUNCI) {
       ins->eks = true;
+      menunggu_tipe_param = false;
       continue;
     }
     if (anak->tipe == PSA_KATA_KUNCI_PUBLIK) {
       ins->pub = true;
+      menunggu_tipe_param = false;
+      continue;
+    }
+    if (anak->tipe == PSA_TIPE_DATA_BILANGAN) {
+      if (menunggu_tipe_param) {
+        ins->tipe_nilai[ins->jumlah - 1] = RA_BILANGAN;
+        menunggu_tipe_param = false;
+      } else {
+        ins->tipe_kembali = RA_BILANGAN;
+      }
+      continue;
+    }
+    if (anak->tipe == PSA_TIPE_DATA_UNTAIAN) {
+      if (menunggu_tipe_param) {
+        ins->tipe_nilai[ins->jumlah - 1] = RA_UNTAIAN;
+        menunggu_tipe_param = false;
+      } else {
+        ins->tipe_kembali = RA_UNTAIAN;
+      }
       continue;
     }
     if (anak->tipe != PSA_PENGENAL)
       continue;
 
     ins->nilai[ins->jumlah] = salin(anak->teks, anak->panjang);
-
-    TipeNilaiRA tipe = RA_TANPA_TIPE;
-    if (i + 1 < deklarasi->jumlah_anak)
-      tipe = tipe_dari_psa(deklarasi->anak[i + 1]->tipe);
-    ins->tipe_nilai[ins->jumlah] = tipe;
+    ins->tipe_nilai[ins->jumlah] = RA_TANPA_TIPE;
     ins->jumlah++;
+    menunggu_tipe_param = true;
   }
 }
 

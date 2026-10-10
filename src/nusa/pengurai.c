@@ -378,6 +378,9 @@ static PSA *urai_berkas(const char *isi, const char *jalur, bool titik_masuk) {
             } else if (lanjut.tipe == TIPE_LEKSIM_KATA_KUNCI_EKSTERNAL) {
               tambah_anak(
                   node, buat_node(PSA_KATA_KUNCI, lanjut.teks, lanjut.panjang));
+            } else if (lanjut.tipe == TIPE_LEKSIM_KATA_KUNCI_PUBLIK) {
+              tambah_anak(node, buat_node(PSA_KATA_KUNCI_PUBLIK, lanjut.teks,
+                                          lanjut.panjang));
             }
           }
 
@@ -389,6 +392,12 @@ static PSA *urai_berkas(const char *isi, const char *jalur, bool titik_masuk) {
                   node, buat_node(PSA_KATA_KUNCI, lanjut.teks, lanjut.panjang));
             } else if (lanjut.tipe == TIPE_LEKSIM_KATA_KUNCI_PUBLIK) {
               tambah_anak(node, buat_node(PSA_KATA_KUNCI_PUBLIK, lanjut.teks,
+                                          lanjut.panjang));
+            } else if (lanjut.tipe == TIPE_LEKSIM_TIPE_DATA_UNTAIAN) {
+              tambah_anak(node, buat_node(PSA_TIPE_DATA_UNTAIAN, lanjut.teks,
+                                          lanjut.panjang));
+            } else if (lanjut.tipe == TIPE_LEKSIM_TIPE_DATA_BILANGAN) {
+              tambah_anak(node, buat_node(PSA_TIPE_DATA_BILANGAN, lanjut.teks,
                                           lanjut.panjang));
             }
           }

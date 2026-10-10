@@ -23,6 +23,7 @@ typedef struct InstruksiRA {
   char **nilai;
   TipeNilaiRA *tipe_nilai;
   int jumlah;
+  TipeNilaiRA tipe_kembali;
   bool eks;
   bool pub;
   char *modul;
