@@ -11,6 +11,7 @@
 #include <llvm-c/Core.h>
 #include <llvm-c/Target.h>
 #include <llvm-c/TargetMachine.h>
+#include <llvm-c/Transforms/PassBuilder.h>
 
 static int bagkang_llvm_jembat(const InstruksiRA *ra, const OpsiBackend *opsi);
 
@@ -145,6 +146,20 @@ static int bagkang_llvm_jembat(const InstruksiRA *ra, const OpsiBackend *opsi) {
         LLVMSetTarget(module, opsi->target);
     }
 
+    LLVMTargetMachineRef tm = NULL;
+    if (opsi->target) {
+        LLVMTargetRef target_ref = NULL;
+        char *err = NULL;
+        if (LLVMGetTargetFromTriple(opsi->target, &target_ref, &err) == 0) {
+            const char *cpu = "generic";
+            const char *features = "";
+            LLVMCodeGenOptLevel opt_level = opsi->optimasi ? LLVMCodeGenLevelAggressive : LLVMCodeGenLevelDefault;
+            tm = LLVMCreateTargetMachine(target_ref, opsi->target, cpu, features,
+                opt_level, LLVMRelocDefault, LLVMCodeModelDefault);
+        }
+        if (err) LLVMDisposeMessage(err);
+    }
+
     for (const InstruksiRA *cur = ra; cur; cur = cur->next) {
         if (cur->tipe != RA_FUNGSI)
             continue;
@@ -230,6 +245,18 @@ static int bagkang_llvm_jembat(const InstruksiRA *ra, const OpsiBackend *opsi) {
         }
     }
 
+    if (opsi->optimasi && tm) {
+        LLVMPassBuilderOptionsRef opts = LLVMCreatePassBuilderOptions();
+        LLVMErrorRef err = LLVMRunPasses(module, "default<O3>", tm, opts);
+        LLVMDisposePassBuilderOptions(opts);
+        if (err) {
+            char *err_msg = LLVMGetErrorMessage(err);
+            fprintf(stderr, "Optimasi gagal: %s\n", err_msg ? err_msg : "unknown");
+            LLVMDisposeErrorMessage(err_msg);
+            LLVMConsumeError(err);
+        }
+    }
+
     if (opsi->bentuk && strcmp(opsi->bentuk, "ra") == 0) {
         char *ir = LLVMPrintModuleToString(module);
         if (opsi->berkas_keluar) {
@@ -242,6 +269,7 @@ static int bagkang_llvm_jembat(const InstruksiRA *ra, const OpsiBackend *opsi) {
                 LLVMDisposeMessage(ir);
                 LLVMDisposeBuilder(builder);
                 LLVMDisposeModule(module);
+                if (tm) LLVMDisposeTargetMachine(tm);
                 return -1;
             }
         } else {
@@ -249,27 +277,8 @@ static int bagkang_llvm_jembat(const InstruksiRA *ra, const OpsiBackend *opsi) {
         }
         LLVMDisposeMessage(ir);
     } else if (opsi->bentuk && strcmp(opsi->bentuk, "rkt") == 0) {
-        if (!opsi->target) {
-            fprintf(stderr, "Target tidak diberikan untuk assembly\n");
-            LLVMDisposeBuilder(builder);
-            LLVMDisposeModule(module);
-            return -1;
-        }
-        LLVMTargetRef target_ref = NULL;
-        char *err = NULL;
-        if (LLVMGetTargetFromTriple(opsi->target, &target_ref, &err) != 0) {
-            fprintf(stderr, "Target tidak didukung LLVM: %s\n", err ? err : "unknown");
-            if (err) LLVMDisposeMessage(err);
-            LLVMDisposeBuilder(builder);
-            LLVMDisposeModule(module);
-            return -1;
-        }
-        const char *cpu = "generic";
-        const char *features = "";
-        LLVMTargetMachineRef tm = LLVMCreateTargetMachine(target_ref, opsi->target, cpu, features,
-            LLVMCodeGenLevelDefault, LLVMRelocDefault, LLVMCodeModelDefault);
         if (!tm) {
-            fprintf(stderr, "Gagal membuat TargetMachine untuk %s\n", opsi->target);
+            fprintf(stderr, "Target tidak diberikan atau tidak didukung untuk assembly\n");
             LLVMDisposeBuilder(builder);
             LLVMDisposeModule(module);
             return -1;
@@ -285,6 +294,7 @@ static int bagkang_llvm_jembat(const InstruksiRA *ra, const OpsiBackend *opsi) {
             return -1;
         }
         
+        char *err = NULL;
         if (opsi->berkas_keluar) {
             if (LLVMTargetMachineEmitToFile(tm, module, (char *)opsi->berkas_keluar, LLVMAssemblyFile, &err) != 0) {
                 fprintf(stderr, "Gagal menulis assembly ke berkas: %s\n", err ? err : "unknown");
@@ -309,6 +319,8 @@ static int bagkang_llvm_jembat(const InstruksiRA *ra, const OpsiBackend *opsi) {
             fwrite(data, 1, size, stdout);
             LLVMDisposeMemoryBuffer(outbuf);
         }
+        LLVMDisposeTargetMachine(tm);
+    } else if (tm) {
         LLVMDisposeTargetMachine(tm);
     }
 
