@@ -27,7 +27,13 @@ void cetak_info() {
   printf("  urai <berkas>                                            Penguraian pohon sintaksis abstrak (PSA).\n");
   printf("  smtk <berkas>                                            Pemeriksaan semantik.\n");
   printf("  ra [opt] <target> <berkas>                               Representasi antara.\n");
-  printf("  llvm [opt] <ra|rkt> <target> <berkas> [<berkas-keluar>]  Backend LLVM.\n");
+  printf("  llvm [opt] <ra|rkt> [teks|obj] <target> <berkas> [<berkas-keluar>]  Backend LLVM.\n");
+  printf("\n");
+  printf("  Kombinasi llvm:\n");
+  printf("    llvm ra teks  -> LLVM IR tekstual (.ll)\n");
+  printf("    llvm rkt teks -> Assembly tekstual (.s)\n");
+  printf("    llvm ra obj   -> Bitcode biner (.bc)\n");
+  printf("    llvm rkt obj  -> Objek biner (.o Linux, .obj Windows)\n");
 }
 
 static char *salin(const char *s) {
