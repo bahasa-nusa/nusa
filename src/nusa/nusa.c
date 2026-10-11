@@ -27,7 +27,7 @@ void cetak_info() {
   printf("  urai <berkas>                                            Penguraian pohon sintaksis abstrak (PSA).\n");
   printf("  smtk <berkas>                                            Pemeriksaan semantik.\n");
   printf("  ra [opt] <target> <berkas>                               Representasi antara.\n");
-  printf("  llvm [opt] <ra|rkt> [teks|obj] <target> <berkas> [<berkas-keluar>]  Backend LLVM.\n");
+  printf("  llvm [opt] <ra|rkt> <teks|obj> <target> <berkas> [<berkas-keluar>]  Backend LLVM.\n");
   printf("\n");
   printf("  Kombinasi llvm:\n");
   printf("    llvm ra teks  -> LLVM IR tekstual (.ll)\n");
@@ -264,7 +264,7 @@ int main(int argc, char **argv) {
             return 1;
           }
           if (!arg.mode || (strcmp(arg.mode, "teks") != 0 && strcmp(arg.mode, "obj") != 0)) {
-            printf("Perintah llvm memerlukan [teks|obj]\n");
+            printf("Perintah llvm memerlukan <teks|obj>\n");
             return 1;
           }
           if (!bagkang_llvm_target_tersedia(arg.target)) {
