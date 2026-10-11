@@ -257,7 +257,27 @@ static int bagkang_llvm_jembat(const InstruksiRA *ra, const OpsiBackend *opsi) {
         }
     }
 
-    if (opsi->bentuk && strcmp(opsi->bentuk, "ra") == 0) {
+    const char *mode = opsi->mode;
+    if (!mode) {
+        fprintf(stderr, "Mode keluaran tidak diberikan (teks|obj)\n");
+        if (tm) LLVMDisposeTargetMachine(tm);
+        LLVMDisposeBuilder(builder);
+        LLVMDisposeModule(module);
+        return -1;
+    }
+
+    bool mode_teks = (strcmp(mode, "teks") == 0);
+    bool mode_obj  = (strcmp(mode, "obj") == 0);
+
+    if (!mode_teks && !mode_obj) {
+        fprintf(stderr, "Mode tidak dikenal: %s (gunakan teks|obj)\n", mode);
+        if (tm) LLVMDisposeTargetMachine(tm);
+        LLVMDisposeBuilder(builder);
+        LLVMDisposeModule(module);
+        return -1;
+    }
+
+    if (opsi->bentuk && strcmp(opsi->bentuk, "ra") == 0 && mode_teks) {
         char *ir = LLVMPrintModuleToString(module);
         if (opsi->berkas_keluar) {
             FILE *file = fopen(opsi->berkas_keluar, "w");
@@ -276,7 +296,8 @@ static int bagkang_llvm_jembat(const InstruksiRA *ra, const OpsiBackend *opsi) {
             printf("%s", ir);
         }
         LLVMDisposeMessage(ir);
-    } else if (opsi->bentuk && strcmp(opsi->bentuk, "rkt") == 0) {
+
+    } else if (opsi->bentuk && strcmp(opsi->bentuk, "rkt") == 0 && mode_teks) {
         if (!tm) {
             fprintf(stderr, "Target tidak diberikan atau tidak didukung untuk assembly\n");
             LLVMDisposeBuilder(builder);
@@ -293,7 +314,7 @@ static int bagkang_llvm_jembat(const InstruksiRA *ra, const OpsiBackend *opsi) {
             LLVMDisposeModule(module);
             return -1;
         }
-        
+
         char *err = NULL;
         if (opsi->berkas_keluar) {
             if (LLVMTargetMachineEmitToFile(tm, module, (char *)opsi->berkas_keluar, LLVMAssemblyFile, &err) != 0) {
@@ -320,8 +341,29 @@ static int bagkang_llvm_jembat(const InstruksiRA *ra, const OpsiBackend *opsi) {
             LLVMDisposeMemoryBuffer(outbuf);
         }
         LLVMDisposeTargetMachine(tm);
-    } else if (tm) {
-        LLVMDisposeTargetMachine(tm);
+
+    } else if (opsi->bentuk && strcmp(opsi->bentuk, "ra") == 0 && mode_obj) {
+        fprintf(stderr, "Mode ra obj belum diimplementasikan (akan tersedia di versi berikutnya)\n");
+        if (tm) LLVMDisposeTargetMachine(tm);
+        LLVMDisposeBuilder(builder);
+        LLVMDisposeModule(module);
+        return -1;
+
+    } else if (opsi->bentuk && strcmp(opsi->bentuk, "rkt") == 0 && mode_obj) {
+        fprintf(stderr, "Mode rkt obj belum diimplementasikan (akan tersedia di versi berikutnya)\n");
+        if (tm) LLVMDisposeTargetMachine(tm);
+        LLVMDisposeBuilder(builder);
+        LLVMDisposeModule(module);
+        return -1;
+
+    } else {
+        fprintf(stderr, "Kombinasi bentuk/mode tidak valid: %s/%s\n",
+                opsi->bentuk ? opsi->bentuk : "?",
+                mode ? mode : "?");
+        if (tm) LLVMDisposeTargetMachine(tm);
+        LLVMDisposeBuilder(builder);
+        LLVMDisposeModule(module);
+        return -1;
     }
 
     LLVMDisposeBuilder(builder);

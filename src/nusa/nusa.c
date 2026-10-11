@@ -263,6 +263,10 @@ int main(int argc, char **argv) {
             printf("Perintah llvm memerlukan <ra|rkt>\n");
             return 1;
           }
+          if (!arg.mode || (strcmp(arg.mode, "teks") != 0 && strcmp(arg.mode, "obj") != 0)) {
+            printf("Perintah llvm memerlukan [teks|obj]\n");
+            return 1;
+          }
           if (!bagkang_llvm_target_tersedia(arg.target)) {
             printf("Target tidak didukung LLVM: %s\n", arg.target);
             return 1;
@@ -280,6 +284,7 @@ int main(int argc, char **argv) {
             .so = NULL,
             .target = arg.target,
             .bentuk = arg.bentuk,
+            .mode = arg.mode,
             .berkas_keluar = arg.berkas_keluar
           };
 

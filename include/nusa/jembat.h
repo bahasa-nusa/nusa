@@ -12,6 +12,7 @@ typedef struct {
   const char *so;
   const char *target;
   const char *bentuk;
+  const char *mode;
   const char *berkas_keluar;
 } OpsiBackend;
 
