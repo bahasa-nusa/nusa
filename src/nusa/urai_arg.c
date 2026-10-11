@@ -35,6 +35,9 @@ Arg urai_arg(int argc, char **argv) {
       if (i + 1 < argc && (strcmp(argv[i + 1], "ra") == 0 || strcmp(argv[i + 1], "rkt") == 0)) {
         args.bentuk = argv[++i];
       }
+      if (i + 1 < argc && (strcmp(argv[i + 1], "teks") == 0 || strcmp(argv[i + 1], "obj") == 0)) {
+        args.mode = argv[++i];
+      }
       if (i + 1 < argc) {
         args.target = argv[++i];
       }
