@@ -12,6 +12,7 @@
 #include <llvm-c/Target.h>
 #include <llvm-c/TargetMachine.h>
 #include <llvm-c/Transforms/PassBuilder.h>
+#include <llvm-c/BitWriter.h>
 
 static int bagkang_llvm_jembat(const InstruksiRA *ra, const OpsiBackend *opsi);
 
@@ -343,11 +344,21 @@ static int bagkang_llvm_jembat(const InstruksiRA *ra, const OpsiBackend *opsi) {
         LLVMDisposeTargetMachine(tm);
 
     } else if (opsi->bentuk && strcmp(opsi->bentuk, "ra") == 0 && mode_obj) {
-        fprintf(stderr, "Mode ra obj belum diimplementasikan (akan tersedia di versi berikutnya)\n");
+        if (!opsi->berkas_keluar) {
+            fprintf(stderr, "Keluaran biner memerlukan <berkas-keluar>\n");
+            if (tm) LLVMDisposeTargetMachine(tm);
+            LLVMDisposeBuilder(builder);
+            LLVMDisposeModule(module);
+            return -1;
+        }
+        if (LLVMWriteBitcodeToFile(module, opsi->berkas_keluar) != 0) {
+            fprintf(stderr, "Gagal menulis bitcode: %s\n", opsi->berkas_keluar);
+            if (tm) LLVMDisposeTargetMachine(tm);
+            LLVMDisposeBuilder(builder);
+            LLVMDisposeModule(module);
+            return -1;
+        }
         if (tm) LLVMDisposeTargetMachine(tm);
-        LLVMDisposeBuilder(builder);
-        LLVMDisposeModule(module);
-        return -1;
 
     } else if (opsi->bentuk && strcmp(opsi->bentuk, "rkt") == 0 && mode_obj) {
         fprintf(stderr, "Mode rkt obj belum diimplementasikan (akan tersedia di versi berikutnya)\n");
