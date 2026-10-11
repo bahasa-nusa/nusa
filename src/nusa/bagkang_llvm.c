@@ -352,15 +352,26 @@ static int bagkang_llvm_jembat(const InstruksiRA *ra, const OpsiBackend *opsi) {
         LLVMDisposeTargetMachine(tm);
 
     } else if (opsi->bentuk && strcmp(opsi->bentuk, "ra") == 0 && mode_obj) {
-        if (!opsi->berkas_keluar) {
-            fprintf(stderr, "Keluaran biner memerlukan <berkas-keluar>\n");
-            if (tm) LLVMDisposeTargetMachine(tm);
-            LLVMDisposeBuilder(builder);
-            LLVMDisposeModule(module);
-            return -1;
+        const char *nama_keluar_bc = opsi->berkas_keluar;
+        char nama_default_bc[512];
+
+        if (!nama_keluar_bc) {
+            const char *sumber = opsi->berkas_masuk ? opsi->berkas_masuk : "keluaran";
+            const char *garis_miring = strrchr(sumber, '/');
+#ifdef _WIN32
+            const char *garis_miring2 = strrchr(sumber, '\\');
+            if (!garis_miring || (garis_miring2 && garis_miring2 > garis_miring))
+                garis_miring = garis_miring2;
+#endif
+            if (garis_miring) sumber = garis_miring + 1;
+            const char *titik = strrchr(sumber, '.');
+            size_t basis_len = titik ? (size_t)(titik - sumber) : strlen(sumber);
+            snprintf(nama_default_bc, sizeof(nama_default_bc), "%.*s.bc", (int)basis_len, sumber);
+            nama_keluar_bc = nama_default_bc;
         }
-        if (LLVMWriteBitcodeToFile(module, opsi->berkas_keluar) != 0) {
-            fprintf(stderr, "Gagal menulis bitcode: %s\n", opsi->berkas_keluar);
+
+        if (LLVMWriteBitcodeToFile(module, nama_keluar_bc) != 0) {
+            fprintf(stderr, "Gagal menulis bitcode: %s\n", nama_keluar_bc);
             if (tm) LLVMDisposeTargetMachine(tm);
             LLVMDisposeBuilder(builder);
             LLVMDisposeModule(module);
