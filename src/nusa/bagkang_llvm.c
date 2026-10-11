@@ -16,6 +16,14 @@
 
 static int bagkang_llvm_jembat(const InstruksiRA *ra, const OpsiBackend *opsi);
 
+static const char *tentukan_ekstensi_obj(const char *triple) {
+    if (!triple) return ".o";
+    if (strstr(triple, "windows") || strstr(triple, "mingw") || strstr(triple, "msvc")) {
+        return ".obj";
+    }
+    return ".o";
+}
+
 static LLVMContextRef llvm_context = NULL;
 
 static void init_llvm_targets(void) {
@@ -361,11 +369,57 @@ static int bagkang_llvm_jembat(const InstruksiRA *ra, const OpsiBackend *opsi) {
         if (tm) LLVMDisposeTargetMachine(tm);
 
     } else if (opsi->bentuk && strcmp(opsi->bentuk, "rkt") == 0 && mode_obj) {
-        fprintf(stderr, "Mode rkt obj belum diimplementasikan (akan tersedia di versi berikutnya)\n");
-        if (tm) LLVMDisposeTargetMachine(tm);
-        LLVMDisposeBuilder(builder);
-        LLVMDisposeModule(module);
-        return -1;
+        if (!tm) {
+            fprintf(stderr, "Target tidak diberikan atau tidak didukung untuk objek\n");
+            LLVMDisposeBuilder(builder);
+            LLVMDisposeModule(module);
+            return -1;
+        }
+
+        char *verr = NULL;
+        if (LLVMVerifyModule(module, LLVMAbortProcessAction, &verr)) {
+            fprintf(stderr, "Verifikasi modul gagal: %s\n", verr);
+            LLVMDisposeMessage(verr);
+            LLVMDisposeTargetMachine(tm);
+            LLVMDisposeBuilder(builder);
+            LLVMDisposeModule(module);
+            return -1;
+        }
+        if (verr) LLVMDisposeMessage(verr);
+
+        const char *nama_keluar = opsi->berkas_keluar;
+        char nama_default[512];
+
+        if (!nama_keluar) {
+            char *triple = LLVMGetTargetMachineTriple(tm);
+            const char *eks = tentukan_ekstensi_obj(triple);
+            LLVMDisposeMessage(triple);
+
+            const char *sumber = opsi->berkas_masuk ? opsi->berkas_masuk : "keluaran";
+            const char *garis_miring = strrchr(sumber, '/');
+#ifdef _WIN32
+            const char *garis_miring2 = strrchr(sumber, '\\');
+            if (!garis_miring || (garis_miring2 && garis_miring2 > garis_miring))
+                garis_miring = garis_miring2;
+#endif
+            if (garis_miring) sumber = garis_miring + 1;
+            const char *titik = strrchr(sumber, '.');
+            size_t basis_len = titik ? (size_t)(titik - sumber) : strlen(sumber);
+            snprintf(nama_default, sizeof(nama_default), "%.*s%s", (int)basis_len, sumber, eks);
+            nama_keluar = nama_default;
+        }
+
+        char *err = NULL;
+        if (LLVMTargetMachineEmitToFile(tm, module, (char *)nama_keluar, LLVMObjectFile, &err) != 0) {
+            fprintf(stderr, "Gagal menulis objek ke berkas: %s\n", err ? err : "unknown");
+            if (err) LLVMDisposeMessage(err);
+            LLVMDisposeTargetMachine(tm);
+            LLVMDisposeBuilder(builder);
+            LLVMDisposeModule(module);
+            return -1;
+        }
+        LLVMDisposeTargetMachine(tm);
+
 
     } else {
         fprintf(stderr, "Kombinasi bentuk/mode tidak valid: %s/%s\n",

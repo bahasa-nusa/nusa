@@ -285,7 +285,8 @@ int main(int argc, char **argv) {
             .target = arg.target,
             .bentuk = arg.bentuk,
             .mode = arg.mode,
-            .berkas_keluar = arg.berkas_keluar
+            .berkas_keluar = arg.berkas_keluar,
+            .berkas_masuk = arg.berkas_masuk
           };
 
           int hasil = jembat_jalankan("llvm", ra_opt_imp, &opsi);

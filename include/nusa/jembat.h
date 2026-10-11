@@ -14,6 +14,7 @@ typedef struct {
   const char *bentuk;
   const char *mode;
   const char *berkas_keluar;
+  const char *berkas_masuk;
 } OpsiBackend;
 
 typedef int (*FungsiBackend)(const InstruksiRA *ra, const OpsiBackend *opsi);
