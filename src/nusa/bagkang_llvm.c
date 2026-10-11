@@ -169,6 +169,14 @@ static int bagkang_llvm_jembat(const InstruksiRA *ra, const OpsiBackend *opsi) {
         if (err) LLVMDisposeMessage(err);
     }
 
+    if (tm) {
+        LLVMTargetDataRef data_layout = LLVMCreateTargetDataLayout(tm);
+        if (data_layout) {
+            LLVMSetModuleDataLayout(module, data_layout);
+            LLVMDisposeTargetData(data_layout);
+        }
+    }
+
     for (const InstruksiRA *cur = ra; cur; cur = cur->next) {
         if (cur->tipe != RA_FUNGSI)
             continue;
@@ -349,7 +357,6 @@ static int bagkang_llvm_jembat(const InstruksiRA *ra, const OpsiBackend *opsi) {
             fwrite(data, 1, size, stdout);
             LLVMDisposeMemoryBuffer(outbuf);
         }
-        LLVMDisposeTargetMachine(tm);
 
     } else if (opsi->bentuk && strcmp(opsi->bentuk, "ra") == 0 && mode_obj) {
         const char *nama_keluar_bc = opsi->berkas_keluar;
@@ -377,7 +384,6 @@ static int bagkang_llvm_jembat(const InstruksiRA *ra, const OpsiBackend *opsi) {
             LLVMDisposeModule(module);
             return -1;
         }
-        if (tm) LLVMDisposeTargetMachine(tm);
 
     } else if (opsi->bentuk && strcmp(opsi->bentuk, "rkt") == 0 && mode_obj) {
         if (!tm) {
@@ -429,8 +435,6 @@ static int bagkang_llvm_jembat(const InstruksiRA *ra, const OpsiBackend *opsi) {
             LLVMDisposeModule(module);
             return -1;
         }
-        LLVMDisposeTargetMachine(tm);
-
 
     } else {
         fprintf(stderr, "Kombinasi bentuk/mode tidak valid: %s/%s\n",
@@ -442,6 +446,7 @@ static int bagkang_llvm_jembat(const InstruksiRA *ra, const OpsiBackend *opsi) {
         return -1;
     }
 
+    if (tm) LLVMDisposeTargetMachine(tm);
     LLVMDisposeBuilder(builder);
     LLVMDisposeModule(module);
     return 0;
