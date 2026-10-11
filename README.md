@@ -66,7 +66,13 @@ Perintah:
   urai <berkas>                                            Penguraian pohon sintaksis abstrak (PSA).
   smtk <berkas>                                            Pemeriksaan semantik.
   ra [opt] <target> <berkas>                               Representasi antara.
-  llvm [opt] <ra|rkt> <target> <berkas> [<berkas-keluar>]  Backend LLVM.
+  llvm [opt] <ra|rkt> [teks|obj] <target> <berkas> [<berkas-keluar>]  Backend LLVM.
+
+  Kombinasi llvm:
+    llvm ra teks  -> LLVM IR tekstual (.ll)
+    llvm rkt teks -> Assembly tekstual (.s)
+    llvm ra obj   -> Bitcode biner (.bc)
+    llvm rkt obj  -> Objek biner (.o Linux, .obj Windows)
 
 ```
 
