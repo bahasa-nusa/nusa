@@ -18,6 +18,7 @@ typedef struct {
   bool llvm;
   const char *target;
   const char *bentuk;
+  const char *mode;
   const char *berkas_keluar;
 } Arg;
 
