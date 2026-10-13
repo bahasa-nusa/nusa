@@ -15,6 +15,7 @@
 
 #include "nusa/urai_arg.h"
 #include "nusa/bagkang_llvm.h"
+#include "nusa/arsip_llvm.h"
 #include "nusa/jembat.h"
 
 void cetak_info() {
@@ -183,6 +184,9 @@ int main(int argc, char **argv) {
       fprintf(stderr, "Penggunaan: nusa llvm ar <berkas-keluar> <nama-berkas>*\n");
       return 1;
     }
+    return bagkang_llvm_buat_arsip(arg.berkas_keluar,
+                                   arg.daftar_berkas_ar,
+                                   arg.jumlah_berkas_ar);
   }
 
   if (arg.berkas_masuk) {
