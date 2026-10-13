@@ -1,9 +1,7 @@
 #!/bin/sh
 ./skrip/gubah.sh
 
-./build/nusa.exe llvm opt rkt teks x86_64-pc-windows-msvc contoh/halodunia.ns halodunia.s
-
-./build/so/wins/64/as.exe -c halodunia.s -o halodunia.o
+./build/nusa.exe llvm opt rkt obj x86_64-pc-windows-msvc contoh/halodunia.ns halodunia.o
 
 ./build/so/wins/64/ld.exe \
     -e titik_masuk \
@@ -14,7 +12,7 @@
     -lkernel32 \
     -o halodunia.exe
 
-rm halodunia.o halodunia.s
+rm halodunia.o
 
 ./halodunia.exe
 echo $?
