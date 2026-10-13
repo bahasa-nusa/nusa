@@ -4,11 +4,11 @@ if(NOT CMAKE_SYSTEM_NAME STREQUAL "Windows")
 endif()
 
 find_program(AS_32 "as.exe" PATHS "${CMAKE_SOURCE_DIR}/so/wins/32" NO_DEFAULT_PATH)
-find_program(AR_32 "ar.exe" PATHS "${CMAKE_SOURCE_DIR}/so/wins/32" NO_DEFAULT_PATH)
 find_program(AS_64 "as.exe" PATHS "${CMAKE_SOURCE_DIR}/so/wins/64" NO_DEFAULT_PATH)
-find_program(AR_64 "ar.exe" PATHS "${CMAKE_SOURCE_DIR}/so/wins/64" NO_DEFAULT_PATH)
 
-function(std_a_arsip arsat as_prog ar_prog)
+set(NUSA_BIN "${CMAKE_BINARY_DIR}/nusa${CMAKE_EXECUTABLE_SUFFIX}")
+
+function(std_a_arsip arsat as_prog)
     file(GLOB sumber "${CMAKE_CURRENT_SOURCE_DIR}/wins/${arsat}/*.s")
     set(obj "")
     foreach(s ${sumber})
@@ -23,16 +23,16 @@ function(std_a_arsip arsat as_prog ar_prog)
     endforeach()
     set(stda "${CMAKE_BINARY_DIR}/wins/${arsat}/std.a")
     add_custom_command(OUTPUT "${stda}"
-        COMMAND ${ar_prog} rcs "${stda}" ${obj}
-        DEPENDS ${obj}
+        COMMAND "${NUSA_BIN}" llvm ar "${stda}" ${obj}
+        DEPENDS ${obj} "${NUSA_BIN}"
         COMMENT "Gubah std.a (Windows ${arsat})")
     add_custom_target(std_a_${arsat} ALL DEPENDS "${stda}")
     install(FILES "${stda}" DESTINATION "so/wins/${arsat}/pus")
 endfunction()
 
-if(AS_32 AND AR_32)
-    std_a_arsip(32 ${AS_32} ${AR_32})
+if(AS_32)
+    std_a_arsip(32 ${AS_32})
 endif()
-if(AS_64 AND AR_64)
-    std_a_arsip(64 ${AS_64} ${AR_64})
-endif()
+if(AS_64)
+    std_a_arsip(64 ${AS_64})
+endif()

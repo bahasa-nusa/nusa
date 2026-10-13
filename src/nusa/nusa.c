@@ -15,19 +15,21 @@
 
 #include "nusa/urai_arg.h"
 #include "nusa/bagkang_llvm.h"
+#include "nusa/arsip_llvm.h"
 #include "nusa/jembat.h"
 
 void cetak_info() {
   printf("Penggunaan: nusa <perintah> [berkas]\n\n");
 
   printf("Perintah:\n");
-  printf("  versi                                                    Untuk melihat versi.\n");
-  printf("  info                                                     Untuk melihat informasi penggunaan.\n");
-  printf("  leks <berkas>                                            Analisis leksim.\n");
-  printf("  urai <berkas>                                            Penguraian pohon sintaksis abstrak (PSA).\n");
-  printf("  smtk <berkas>                                            Pemeriksaan semantik.\n");
-  printf("  ra [opt] <target> <berkas>                               Representasi antara.\n");
+  printf("  versi                                                               Untuk melihat versi.\n");
+  printf("  info                                                                Untuk melihat informasi penggunaan.\n");
+  printf("  leks <berkas>                                                       Analisis leksim.\n");
+  printf("  urai <berkas>                                                       Penguraian pohon sintaksis abstrak (PSA).\n");
+  printf("  smtk <berkas>                                                       Pemeriksaan semantik.\n");
+  printf("  ra [opt] <target> <berkas>                                          Representasi antara.\n");
   printf("  llvm [opt] <ra|rkt> <teks|obj> <target> <berkas> [<berkas-keluar>]  Backend LLVM.\n");
+  printf("  llvm ar <berkas-keluar> <nama-berkas>*                              Buat arsip pustaka statis (.a).\n");
   printf("\n");
   printf("  Kombinasi llvm:\n");
   printf("    llvm ra teks  -> LLVM IR tekstual (.ll)\n");
@@ -175,6 +177,16 @@ int main(int argc, char **argv) {
   if (arg.info) {
     cetak_info();
     return 0;
+  }
+
+  if (arg.llvm_ar) {
+    if (!arg.berkas_keluar || arg.jumlah_berkas_ar == 0) {
+      fprintf(stderr, "Penggunaan: nusa llvm ar <berkas-keluar> <nama-berkas>*\n");
+      return 1;
+    }
+    return bagkang_llvm_buat_arsip(arg.berkas_keluar,
+                                   arg.daftar_berkas_ar,
+                                   arg.jumlah_berkas_ar);
   }
 
   if (arg.berkas_masuk) {

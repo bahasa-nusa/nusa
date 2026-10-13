@@ -60,13 +60,14 @@ $ nusa info
 Penggunaan: nusa <perintah> [berkas]
 
 Perintah:
-  versi                                                    Untuk melihat versi.
-  info                                                     Untuk melihat informasi penggunaan.
-  leks <berkas>                                            Analisis leksim.
-  urai <berkas>                                            Penguraian pohon sintaksis abstrak (PSA).
-  smtk <berkas>                                            Pemeriksaan semantik.
-  ra [opt] <target> <berkas>                               Representasi antara.
+  versi                                                               Untuk melihat versi.
+  info                                                                Untuk melihat informasi penggunaan.
+  leks <berkas>                                                       Analisis leksim.
+  urai <berkas>                                                       Penguraian pohon sintaksis abstrak (PSA).
+  smtk <berkas>                                                       Pemeriksaan semantik.
+  ra [opt] <target> <berkas>                                          Representasi antara.
   llvm [opt] <ra|rkt> <teks|obj> <target> <berkas> [<berkas-keluar>]  Backend LLVM.
+  llvm ar <berkas-keluar> <nama-berkas>*                              Buat arsip pustaka statis (.a).
 
   Kombinasi llvm:
     llvm ra teks  -> LLVM IR tekstual (.ll)
