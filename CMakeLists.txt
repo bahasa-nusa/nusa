@@ -42,6 +42,7 @@ file(
     GLOB_RECURSE
     SEMUA_FILE_SUMBER_NUSA
     "src/nusa/*.c"
+    "src/nusa/*.cpp"
 )
 
 add_executable(
