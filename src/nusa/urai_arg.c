@@ -27,6 +27,19 @@ Arg urai_arg(int argc, char **argv) {
         args.target = argv[++i];
       }
     } else if (strcmp(argv[i], "llvm") == 0) {
+      if (i + 1 < argc && strcmp(argv[i + 1], "ar") == 0) {
+        args.llvm_ar = true;
+        i++;
+        if (i + 1 < argc) {
+          args.berkas_keluar = argv[++i];
+        }
+        if (i + 1 < argc) {
+          args.daftar_berkas_ar = (const char **)&argv[i + 1];
+          args.jumlah_berkas_ar = argc - (i + 1);
+          i = argc;
+        }
+        continue;
+      }
       args.llvm = true;
       if (i + 1 < argc && strcmp(argv[i + 1], "opt") == 0) {
         args.opt = true;

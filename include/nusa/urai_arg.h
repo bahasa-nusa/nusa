@@ -16,10 +16,13 @@ typedef struct {
   bool ra;
   bool opt;
   bool llvm;
+  bool llvm_ar;
   const char *target;
   const char *bentuk;
   const char *mode;
   const char *berkas_keluar;
+  const char **daftar_berkas_ar;
+  int jumlah_berkas_ar;
 } Arg;
 
 Arg urai_arg(int jum_arg, char **isi_arg);
