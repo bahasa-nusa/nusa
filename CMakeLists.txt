@@ -37,6 +37,9 @@ find_package(LLD REQUIRED CONFIG)
 message(STATUS "Found LLD ${LLD_VERSION}")
 message(STATUS "Using LLDConfig.cmake in: ${LLD_DIR}")
 
+# std.a dari bahasa rakitan
+add_subdirectory(src/std)
+
 # nusa
 file(
     GLOB_RECURSE
@@ -95,9 +98,6 @@ install(
     FILES "LICENSE"
     DESTINATION "."
 )
-
-# std.a dari bahasa rakitan
-add_subdirectory(src/std)
 
 # Uji jembat
 add_executable(
