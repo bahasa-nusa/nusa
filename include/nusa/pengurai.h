@@ -1,6 +1,3 @@
-// Copyright 2026 Pengembang Bahasa Pemrograman Nusa
-// SPDX-License-Identifier: Apache-2.0
-
 #ifndef NUSA_PENGURAI_H
 #define NUSA_PENGURAI_H
 
@@ -14,13 +11,15 @@ typedef enum {
   PSA_PENGENAL,
   PSA_NILAI_UNTAIAN,
   PSA_NILAI_BILANGAN,
-  PSA_KATA_KUNCI,         // eks
-  PSA_KATA_KUNCI_PUBLIK,  // pub
-  PSA_TIPE_DATA_BILANGAN, // b32
-  PSA_TIPE_DATA_UNTAIAN,  // unt
-  PSA_MUAT,
+  PSA_KATA_KUNCI,
+  PSA_KATA_KUNCI_PUBLIK,
+  PSA_TIPE_DATA_BILANGAN,
+  PSA_TIPE_DATA_UNTAIAN,
+  PSA_MOD,
   PSA_TITIK,
 } TipePSA;
+
+#define PSA_MUAT PSA_MOD
 
 typedef struct PSA PSA;
 struct PSA {
@@ -34,9 +33,11 @@ struct PSA {
   int jumlah_anak;
 };
 
+PSA *urai_banyak_berkas(const char **daftar_jalur, int jumlah_berkas);
+
 PSA *urai(const char *isi, const char *jalur_berkas);
 
-const char *pesan_urai();
+const char *pesan_urai(void);
 
 void cetak_psa(const PSA *node, int indent);
 

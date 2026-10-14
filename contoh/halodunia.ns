@@ -3,8 +3,7 @@
 
 # Ini adalah komentar
 
-muat
-std "std.ns" # Muat berkas pustaka standar
+mod std
 
 std.cetak("Halo Aerell!\n")
 

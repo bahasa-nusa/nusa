@@ -138,4 +138,20 @@ target_include_directories(
     "include"
 )
 
+# Uji pengurai
+add_executable(
+    nusa_uji_pengurai
+    src/uji/uji_pengurai.c
+    src/nusa/pengurai.c
+    src/nusa/peleksim.c
+    src/nusa/berkas.c
+)
+
+target_include_directories(
+    nusa_uji_pengurai
+    PRIVATE
+    "include"
+)
+
+
 

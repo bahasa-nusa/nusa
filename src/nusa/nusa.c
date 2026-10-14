@@ -22,7 +22,7 @@ void cetak_info() {
   printf("  versi                                                               Untuk melihat versi.\n");
   printf("  info                                                                Untuk melihat informasi penggunaan.\n");
   printf("  leks <berkas>                                                       Analisis leksim.\n");
-  printf("  urai <berkas>                                                       Penguraian pohon sintaksis abstrak (PSA).\n");
+  printf("  urai <berkas>*                                                      Penguraian pohon sintaksis abstrak (PSA).\n");
   printf("  smtk <berkas>                                                       Pemeriksaan semantik.\n");
   printf("  ra [opt] <target> <berkas>                                          Representasi antara.\n");
   printf("  llvm [opt] <ra|rkt> <teks|obj> <target> <berkas> [<berkas-keluar>]  Backend LLVM.\n");
@@ -99,9 +99,25 @@ int main(int argc, char **argv) {
     return 0;
   }
 
+  if (arg.urai) {
+    if (arg.jumlah_berkas_masuk == 0) {
+      printf("Argumen tidak valid.\n");
+      cetak_info();
+      return 1;
+    }
+    printf("PSA:\n");
+    PSA *psa = urai_banyak_berkas(arg.daftar_berkas_masuk, arg.jumlah_berkas_masuk);
+    if (!psa) {
+      return 1;
+    }
+    cetak_psa(psa, 0);
+    bersihkan_psa(psa);
+    return 0;
+  }
+
   const char *berkas_masuk = arg.jumlah_berkas_masuk > 0 ? arg.daftar_berkas_masuk[0] : NULL;
   if (berkas_masuk) {
-    if (!arg.urai && !arg.smtk && !arg.ra && !arg.opt && !arg.llvm) {
+    if (!arg.smtk && !arg.ra && !arg.opt && !arg.llvm) {
       printf("Argumen tidak valid.\n");
       cetak_info();
       return 1;
@@ -119,18 +135,12 @@ int main(int argc, char **argv) {
       return 1;
     }
 
-    if (arg.urai || arg.smtk || arg.ra || arg.opt || arg.llvm) {
-      if (arg.urai) {
-        printf("PSA:\n");
-      }
+    if (arg.smtk || arg.ra || arg.opt || arg.llvm) {
       bersihkan_daftar_dimuat();
       tandai_berkas_dimuat(berkas_masuk);
 
       PSA *psa = urai(isi_berkas, berkas_masuk);
       if (psa) {
-        if (arg.urai) {
-          cetak_psa(psa, 0);
-        }
         if (arg.smtk) {
           printf("\nPesemantik:\n");
           int galat = pesemantik(psa);

@@ -1,6 +1,3 @@
-// Copyright 2026 Pengembang Bahasa Pemrograman Nusa
-// SPDX-License-Identifier: Apache-2.0
-
 #include "nusa/pengurai.h"
 #include "nusa/berkas.h"
 #include "nusa/peleksim.h"
@@ -10,9 +7,8 @@
 #include <string.h>
 
 static const char *pesan_kesalahan = NULL;
-static char *akar_dasar = NULL;
 
-const char *pesan_urai() { return pesan_kesalahan; }
+const char *pesan_urai(void) { return pesan_kesalahan; }
 
 static char *salin_n(const char *s, int n) {
   if (!s)
@@ -20,7 +16,7 @@ static char *salin_n(const char *s, int n) {
   char *r = malloc((size_t)n + 1);
   if (!r)
     return NULL;
-  memcpy(r, s, n);
+  memcpy(r, s, (size_t)n);
   r[n] = '\0';
   return r;
 }
@@ -45,25 +41,29 @@ static PSA *buat_node(TipePSA tipe, const char *teks, int panjang) {
   return node;
 }
 
-static char *modul_dari_jalur(const char *jalur, const char *akar_dasar) {
+static char *modul_dari_jalur(const char *jalur) {
+  if (!jalur)
+    return NULL;
+
   const char *mulai = jalur;
+  if (strncmp(mulai, "./", 2) == 0 || strncmp(mulai, ".\\", 2) == 0)
+    mulai += 2;
+  if (strncmp(mulai, "kode/", 5) == 0 || strncmp(mulai, "kode\\", 5) == 0)
+    mulai += 5;
+  else if (strncmp(mulai, "contoh/", 7) == 0 || strncmp(mulai, "contoh\\", 7) == 0)
+    mulai += 7;
 
-  size_t pjg_dasar = strlen(akar_dasar);
-  if (pjg_dasar > 0 && strncmp(jalur, akar_dasar, pjg_dasar) == 0) {
-    mulai = jalur + pjg_dasar;
-    while (*mulai == '/' || *mulai == '\\')
-      mulai++;
-  }
+  size_t pjg = strlen(mulai);
+  if (pjg >= 3 && strcmp(mulai + pjg - 3, ".ns") == 0)
+    pjg -= 3;
 
-  char *r = salin(mulai);
+  char *r = salin_n(mulai, (int)pjg);
   if (!r)
     return NULL;
 
   for (char *c = r; *c; c++) {
-    if (!((*c >= 'a' && *c <= 'z') || (*c >= 'A' && *c <= 'Z') ||
-          (*c >= '0' && *c <= '9'))) {
-      *c = '_';
-    }
+    if (*c == '/' || *c == '\\')
+      *c = '.';
   }
 
   return r;
@@ -71,7 +71,7 @@ static char *modul_dari_jalur(const char *jalur, const char *akar_dasar) {
 
 static void tambah_anak(PSA *induk, PSA *anak) {
   induk->jumlah_anak++;
-  induk->anak = realloc(induk->anak, sizeof(PSA *) * induk->jumlah_anak);
+  induk->anak = realloc(induk->anak, sizeof(PSA *) * (size_t)induk->jumlah_anak);
   induk->anak[induk->jumlah_anak - 1] = anak;
 }
 
@@ -125,7 +125,7 @@ void cetak_psa(const PSA *node, int indent) {
                                     "KATA KUNCI PUBLIK",
                                     "TIPE DATA B32",
                                     "TIPE DATA UNTAIAN",
-                                    "MUAT",
+                                    "MOD",
                                     "TITIK"};
   printf("[%s] %.*s\n", nama_tipe[node->tipe], node->panjang, node->teks);
 
@@ -171,83 +171,90 @@ static const char *urai_argumen(const char *ptr, PSA *node) {
   return ptr;
 }
 
-static PSA *urai_berkas(const char *isi, const char *jalur, bool titik_masuk);
-
-static void muat_siswa(PSA *akar, PSA *node_muat, const char *teks_jalur,
-                       int panjang) {
-  char quote = teks_jalur[0];
-  if (panjang < 2 || (quote != '\'' && quote != '"') ||
-      teks_jalur[panjang - 1] != quote)
-    return;
-
-  int pjg_jalur = panjang - 2;
-  if (pjg_jalur <= 0)
-    return;
-
-  char *nama = malloc((size_t)pjg_jalur + 1);
-  if (!nama)
-    return;
-  strncpy(nama, teks_jalur + 1, pjg_jalur);
-  nama[pjg_jalur] = '\0';
-
-  char *res = NULL;
-  cari_berkas(nama, &res, NULL);
-  free(nama);
-  if (!res)
-    return;
-
-  node_muat->jalur = salin(res);
-
-  if (berkas_sudah_dimuat(res)) {
-    for (int i = 0; i < akar->jumlah_anak; i++) {
-      PSA *b = akar->anak[i];
-      if (b->tipe == PSA_BERKAS && b->jalur && strcmp(b->jalur, res) == 0 && b->modul) {
-        tambah_anak(node_muat, buat_node(PSA_PENGENAL, b->modul, (int)strlen(b->modul)));
-      }
-    }
-    free(res);
-    return;
+static const char *leksim_berikut(const char *ptr, Leksim *hasil) {
+  const char *p = ptr;
+  while ((p = peleksim(p, hasil)) && hasil->tipe == TIPE_LEKSIM_KOMENTAR) {
   }
-
-  tandai_berkas_dimuat(res);
-
-  const char *sub_isi = baca_berkas(res);
-  if (sub_isi) {
-    PSA *sub = urai_berkas(sub_isi, res, false);
-    for (int i = 0; i < sub->jumlah_anak; i++) {
-      tambah_anak(akar, sub->anak[i]);
-    }
-    free(sub->anak);
-    free(sub);
-    bersihkan_berkas(sub_isi);
-
-    for (int i = 0; i < akar->jumlah_anak; i++) {
-      PSA *b = akar->anak[i];
-      if (b->tipe == PSA_BERKAS && b->modul) {
-        bool sudah_ada = false;
-        for (int k = 1; k < node_muat->jumlah_anak; k++) {
-          if (node_muat->anak[k]->tipe == PSA_PENGENAL &&
-              strcmp(node_muat->anak[k]->teks, b->modul) == 0) {
-            sudah_ada = true;
-            break;
-          }
-        }
-        if (!sudah_ada && b->jalur && strcmp(b->jalur, res) == 0) {
-          tambah_anak(node_muat, buat_node(PSA_PENGENAL, b->modul, (int)strlen(b->modul)));
-        }
-      }
-    }
-  }
-
-  free(res);
+  return p;
 }
 
-static PSA *urai_berkas(const char *isi, const char *jalur, bool titik_masuk) {
-  PSA *akar = buat_node(PSA_PROGRAM, "program", 7);
+static char *urai_pengenal_modul(const char **ptr_masuk) {
+  Leksim t1;
+  const char *p = leksim_berikut(*ptr_masuk, &t1);
+  if (t1.tipe != TIPE_LEKSIM_PENGENAL)
+    return NULL;
+
+  Leksim t2;
+  leksim_berikut(p, &t2);
+  if (t2.tipe == TIPE_LEKSIM_KURUNG_BULAT_BUKA || t2.tipe == TIPE_LEKSIM_OPERASI_ISI)
+    return NULL;
+
+  if (t2.tipe != TIPE_LEKSIM_TITIK) {
+    *ptr_masuk = p;
+    return salin_n(t1.teks, t1.panjang);
+  }
+
+  size_t kapasitas = 128;
+  char *hasil = malloc(kapasitas);
+  if (!hasil)
+    return NULL;
+
+  size_t len = (size_t)t1.panjang;
+  memcpy(hasil, t1.teks, len);
+  hasil[len] = '\0';
+
+  const char *pos = p;
+  while (true) {
+    Leksim titik;
+    const char *pos_titik = leksim_berikut(pos, &titik);
+    if (titik.tipe != TIPE_LEKSIM_TITIK)
+      break;
+
+    Leksim sub;
+    const char *pos_sub = leksim_berikut(pos_titik, &sub);
+    if (sub.tipe != TIPE_LEKSIM_PENGENAL) {
+      free(hasil);
+      return NULL;
+    }
+
+    Leksim sesudah_sub;
+    leksim_berikut(pos_sub, &sesudah_sub);
+    if (sesudah_sub.tipe == TIPE_LEKSIM_KURUNG_BULAT_BUKA) {
+      free(hasil);
+      return NULL;
+    }
+
+    size_t perlu = len + 1 + (size_t)sub.panjang + 1;
+    if (perlu > kapasitas) {
+      kapasitas = perlu * 2;
+      char *baru = realloc(hasil, kapasitas);
+      if (!baru) {
+        free(hasil);
+        return NULL;
+      }
+      hasil = baru;
+    }
+    hasil[len++] = '.';
+    memcpy(hasil + len, sub.teks, (size_t)sub.panjang);
+    len += (size_t)sub.panjang;
+    hasil[len] = '\0';
+
+    pos = pos_sub;
+  }
+
+  *ptr_masuk = pos;
+  return hasil;
+}
+
+static PSA *urai_satu_berkas(const char *isi, const char *jalur, bool titik_masuk,
+                             bool izinkan_mod) {
   PSA *modul = buat_node(PSA_BERKAS, NULL, 0);
   modul->jalur = salin(jalur);
   modul->titik_masuk = titik_masuk;
-  modul->modul = modul_dari_jalur(jalur, akar_dasar);
+  modul->modul = modul_dari_jalur(jalur);
+
+  bool mod_sudah_dideklarasikan = false;
+  bool pernyataan_ditemukan = false;
 
   Leksim leksim;
   const char *ptr = isi;
@@ -257,94 +264,120 @@ static PSA *urai_berkas(const char *isi, const char *jalur, bool titik_masuk) {
       continue;
 
     if (leksim.tipe == TIPE_LEKSIM_KATA_KUNCI_MOD) {
-      Leksim lanjut;
-      const char *p = ptr;
-      char *alias = NULL;
-      int alias_panjang = 0;
-      int jumlah = 0;
-
-      for (;;) {
-        const char *p1 = peleksim(p, &lanjut);
-        if (lanjut.tipe == TIPE_LEKSIM_KOMENTAR) {
-          p = p1;
-          continue;
-        }
-
-        if (lanjut.tipe == TIPE_LEKSIM_PENGENAL) {
-          Leksim t2;
-          const char *p2 = peleksim(p1, &t2);
-          while (t2.tipe == TIPE_LEKSIM_KOMENTAR)
-            p2 = peleksim(p2, &t2);
-          if (t2.tipe != TIPE_LEKSIM_NILAI_UNTAIAN)
-            break;
-          free(alias);
-          alias = salin_n(lanjut.teks, lanjut.panjang);
-          alias_panjang = lanjut.panjang;
-          p = p1;
-          continue;
-        }
-
-        if (lanjut.tipe == TIPE_LEKSIM_NILAI_UNTAIAN) {
-          PSA *node = buat_node(PSA_MUAT, alias ? alias : "_",
-                                alias ? alias_panjang : 1);
-          node->modul = salin(modul->modul);
-          tambah_anak(node, buat_node(PSA_NILAI_UNTAIAN, lanjut.teks, lanjut.panjang));
-          muat_siswa(akar, node, lanjut.teks, lanjut.panjang);
-          tambah_anak(modul, node);
-          jumlah++;
-          free(alias);
-          alias = NULL;
-          alias_panjang = 0;
-          p = p1;
-          continue;
-        }
-        break;
+      if (!izinkan_mod || pernyataan_ditemukan) {
+        printf(
+            "Kesalahan: kata kunci 'mod' harus berada di awal berkas (di %s)\n",
+            modul->jalur ? modul->jalur : "?");
+        pesan_kesalahan = "kata kunci 'mod' harus berada di awal berkas";
+        bersihkan_psa(modul);
+        return NULL;
       }
 
-      free(alias);
-      ptr = p;
-      if (!jumlah)
-        printf(
-          "Kesalahan: sintaks muat 'muat [alias] \"nama_berkas.ns\"' (di %s)\n", 
-          modul->jalur ? modul->jalur : "?"
-        );
+      if (mod_sudah_dideklarasikan) {
+        printf("Kesalahan: kata kunci 'mod' hanya boleh dideklarasikan sekali "
+               "di awal berkas (di %s)\n",
+               modul->jalur ? modul->jalur : "?");
+        pesan_kesalahan =
+            "kata kunci 'mod' hanya boleh dideklarasikan sekali di awal berkas";
+        bersihkan_psa(modul);
+        return NULL;
+      }
+
+      mod_sudah_dideklarasikan = true;
+      PSA *node_mod = buat_node(PSA_MOD, leksim.teks, leksim.panjang);
+      node_mod->modul = salin(modul->modul);
+
+      while (true) {
+        char *nama_mod = urai_pengenal_modul(&ptr);
+        if (!nama_mod)
+          break;
+        PSA *anak_mod =
+            buat_node(PSA_PENGENAL, nama_mod, (int)strlen(nama_mod));
+        tambah_anak(node_mod, anak_mod);
+        free(nama_mod);
+      }
+
+      tambah_anak(modul, node_mod);
       continue;
     }
+
+    pernyataan_ditemukan = true;
 
     if (leksim.tipe == TIPE_LEKSIM_PENGENAL) {
       Leksim lanjut;
       const char *ptr_lanjut = peleksim(ptr, &lanjut);
 
-
       if (lanjut.tipe == TIPE_LEKSIM_TITIK) {
-        Leksim sesudah;
-        const char *ptr_sesudah = peleksim(ptr_lanjut, &sesudah);
-        if (sesudah.tipe == TIPE_LEKSIM_PENGENAL) {
-          Leksim buka;
-          const char *ptr_buka = peleksim(ptr_sesudah, &buka);
-          if (buka.tipe == TIPE_LEKSIM_KURUNG_BULAT_BUKA) {
-            size_t pjg = (size_t)leksim.panjang + 1 + (size_t)sesudah.panjang;
-            char *nama = malloc(pjg + 1);
-            memcpy(nama, leksim.teks, leksim.panjang);
-            nama[leksim.panjang] = '.';
-            memcpy(nama + leksim.panjang + 1, sesudah.teks, sesudah.panjang);
-            nama[pjg] = '\0';
+        size_t kapasitas = 128;
+        char *nama_panggilan = malloc(kapasitas);
+        size_t pjg_panggilan = (size_t)leksim.panjang;
+        memcpy(nama_panggilan, leksim.teks, pjg_panggilan);
+        nama_panggilan[pjg_panggilan] = '\0';
 
-            PSA *node = buat_node(PSA_PANGGILAN, nama, (int)pjg);
-            node->modul = salin(modul->modul);
-            free(nama);
-            tambah_anak(modul, node);
-            ptr = urai_argumen(ptr_buka, node);
-            continue;
+        const char *pos = ptr;
+        bool panggilan_valid = false;
+        const char *pos_setelah_buka = NULL;
+
+        while (true) {
+          Leksim titik;
+          const char *pos_titik = peleksim(pos, &titik);
+          while (titik.tipe == TIPE_LEKSIM_KOMENTAR)
+            pos_titik = peleksim(pos_titik, &titik);
+          if (titik.tipe != TIPE_LEKSIM_TITIK)
+            break;
+
+          Leksim sub;
+          const char *pos_sub = peleksim(pos_titik, &sub);
+          while (sub.tipe == TIPE_LEKSIM_KOMENTAR)
+            pos_sub = peleksim(pos_sub, &sub);
+          if (sub.tipe != TIPE_LEKSIM_PENGENAL)
+            break;
+
+          size_t perlu = pjg_panggilan + 1 + (size_t)sub.panjang + 1;
+          if (perlu > kapasitas) {
+            kapasitas = perlu * 2;
+            char *baru = realloc(nama_panggilan, kapasitas);
+            if (!baru) {
+              free(nama_panggilan);
+              bersihkan_psa(modul);
+              return NULL;
+            }
+            nama_panggilan = baru;
           }
-          printf(
-            "Kesalahan: bertitik hanya didukung dalam panggilan, '%.*s.%.*s' (di %s)\n",
-            leksim.panjang, leksim.teks, sesudah.panjang, sesudah.teks,
-            modul->jalur ? modul->jalur : "?"
-          );
-          ptr = ptr_sesudah;
+          nama_panggilan[pjg_panggilan++] = '.';
+          memcpy(nama_panggilan + pjg_panggilan, sub.teks, (size_t)sub.panjang);
+          pjg_panggilan += (size_t)sub.panjang;
+          nama_panggilan[pjg_panggilan] = '\0';
+
+          Leksim sesudah;
+          const char *pos_sesudah = peleksim(pos_sub, &sesudah);
+          while (sesudah.tipe == TIPE_LEKSIM_KOMENTAR)
+            pos_sesudah = peleksim(pos_sesudah, &sesudah);
+
+          if (sesudah.tipe == TIPE_LEKSIM_KURUNG_BULAT_BUKA) {
+            panggilan_valid = true;
+            pos_setelah_buka = pos_sesudah;
+            break;
+          }
+
+          pos = pos_sub;
+        }
+
+        if (panggilan_valid) {
+          PSA *node = buat_node(PSA_PANGGILAN, nama_panggilan, (int)pjg_panggilan);
+          node->modul = salin(modul->modul);
+          free(nama_panggilan);
+          tambah_anak(modul, node);
+          ptr = urai_argumen(pos_setelah_buka, node);
           continue;
         }
+
+        printf(
+            "Kesalahan: bertitik hanya didukung dalam panggilan, '%s' (di %s)\n",
+            nama_panggilan, modul->jalur ? modul->jalur : "?");
+        free(nama_panggilan);
+        bersihkan_psa(modul);
+        return NULL;
       }
 
       if (lanjut.tipe == TIPE_LEKSIM_KURUNG_BULAT_BUKA) {
@@ -424,15 +457,15 @@ static PSA *urai_berkas(const char *isi, const char *jalur, bool titik_masuk) {
             char *sub = malloc(len + 1);
             memcpy(sub, start, len);
             sub[len] = '\0';
-            PSA *sub_modul = urai_berkas(sub, modul->jalur, false);
-            for (int i = 0; i < sub_modul->jumlah_anak; i++) {
-              PSA *berkas_anak = sub_modul->anak[i];
-              if (berkas_anak->tipe == PSA_BERKAS) {
-                for (int j = 0; j < berkas_anak->jumlah_anak; j++) {
-                  tambah_anak(node, berkas_anak->anak[j]);
-                  berkas_anak->anak[j] = NULL;
-                }
-              }
+            PSA *sub_modul = urai_satu_berkas(sub, modul->jalur, false, false);
+            if (!sub_modul) {
+              free(sub);
+              bersihkan_psa(modul);
+              return NULL;
+            }
+            for (int j = 0; j < sub_modul->jumlah_anak; j++) {
+              tambah_anak(node, sub_modul->anak[j]);
+              sub_modul->anak[j] = NULL;
             }
             bersihkan_psa(sub_modul);
             free(sub);
@@ -462,22 +495,44 @@ static PSA *urai_berkas(const char *isi, const char *jalur, bool titik_masuk) {
     }
   }
 
-  tambah_anak(akar, modul);
+  return modul;
+}
+
+PSA *urai_banyak_berkas(const char **daftar_jalur, int jumlah_berkas) {
+  if (!daftar_jalur || jumlah_berkas <= 0)
+    return NULL;
+
+  PSA *akar = buat_node(PSA_PROGRAM, "program", 7);
+
+  for (int i = 0; i < jumlah_berkas; i++) {
+    const char *jalur = daftar_jalur[i];
+    const char *isi = baca_berkas(jalur);
+    if (!isi) {
+      printf("Gagal baca: %s\n", jalur);
+      bersihkan_psa(akar);
+      return NULL;
+    }
+
+    PSA *berkas = urai_satu_berkas(isi, jalur, i == 0, true);
+    bersihkan_berkas(isi);
+    if (!berkas) {
+      bersihkan_psa(akar);
+      return NULL;
+    }
+
+    tambah_anak(akar, berkas);
+  }
+
   return akar;
 }
 
 PSA *urai(const char *isi, const char *jalur_berkas) {
-  char *kanon = jalur_kanonis(jalur_berkas);
-
-  size_t pjg = strlen(kanon);
-  while (pjg > 0 && kanon[pjg - 1] != '/' && kanon[pjg - 1] != '\\')
-    pjg--;
-
-  free(akar_dasar);
-  akar_dasar = salin_n(kanon, (int)pjg);
-
-  PSA *akar = urai_berkas(isi, kanon, true);
-
-  free(kanon);
+  PSA *akar = buat_node(PSA_PROGRAM, "program", 7);
+  PSA *berkas = urai_satu_berkas(isi, jalur_berkas, true, true);
+  if (!berkas) {
+    bersihkan_psa(akar);
+    return NULL;
+  }
+  tambah_anak(akar, berkas);
   return akar;
 }
