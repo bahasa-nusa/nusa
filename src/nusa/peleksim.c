@@ -1,6 +1,3 @@
-// Copyright 2026 Pengembang Bahasa Pemrograman Nusa
-// SPDX-License-Identifier: Apache-2.0
-
 #include "nusa/peleksim.h"
 #include <ctype.h>
 #include <stdbool.h>
@@ -44,8 +41,8 @@ const char *nama_leksim(TipeLeksim tipe) {
     return "KURUNG KURAWAT TUTUP";
   case TIPE_LEKSIM_OPERASI_ISI:
     return "OPERASI ISI";
-  case TIPE_LEKSIM_TIPE_DATA_MUAT:
-    return "TIPE DATA MUAT";
+  case TIPE_LEKSIM_KATA_KUNCI_MOD:
+    return "MOD";
   case TIPE_LEKSIM_TITIK:
     return "TITIK";
   default:
@@ -133,11 +130,11 @@ const char *peleksim(const char *isi, Leksim *hasil) {
       return isi + 3;
     }
 
-    if (strncmp(isi, "muat", 4) == 0 && batas_kata_kunci(isi, 4)) {
-      hasil->tipe = TIPE_LEKSIM_TIPE_DATA_MUAT;
+    if (strncmp(isi, "mod", 3) == 0 && batas_kata_kunci(isi, 3)) {
+      hasil->tipe = TIPE_LEKSIM_KATA_KUNCI_MOD;
       hasil->teks = awal;
-      hasil->panjang = 4;
-      return isi + 4;
+      hasil->panjang = 3;
+      return isi + 3;
     }
 
     if (strncmp(isi, "b32", 3) == 0 && batas_kata_kunci(isi, 3)) {

@@ -256,7 +256,7 @@ static PSA *urai_berkas(const char *isi, const char *jalur, bool titik_masuk) {
     if (leksim.tipe == TIPE_LEKSIM_KOMENTAR)
       continue;
 
-    if (leksim.tipe == TIPE_LEKSIM_TIPE_DATA_MUAT) {
+    if (leksim.tipe == TIPE_LEKSIM_KATA_KUNCI_MOD) {
       Leksim lanjut;
       const char *p = ptr;
       char *alias = NULL;

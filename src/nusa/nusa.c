@@ -1,6 +1,3 @@
-// Copyright 2026 Pengembang Bahasa Pemrograman Nusa
-// SPDX-License-Identifier: Apache-2.0
-
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,134 +35,6 @@ void cetak_info() {
   printf("    llvm rkt obj  -> Objek biner (.o Linux, .obj Windows)\n");
 }
 
-static char *salin(const char *s) {
-  if (!s)
-    return NULL;
-
-  size_t p = strlen(s) + 1;
-  char *r = malloc(p);
-  if (r)
-    memcpy(r, s, p);
-
-  return r;
-}
-
-typedef struct InfoBer {
-  char *isi;
-  char *jalur;
-  bool titik_masuk;
-  struct InfoBer *lanjut;
-} InfoBer;
-
-static InfoBer *daftar_info = NULL;
-
-static void kumpul_leksim(const char *isi, const char *jalur, bool titik_masuk) {
-  InfoBer *ib = malloc(sizeof(InfoBer));
-  ib->isi = salin(isi);
-  ib->jalur = salin(jalur);
-  ib->titik_masuk = titik_masuk;
-  ib->lanjut = NULL;
-
-  const char *ptr = isi;
-  Leksim leksim;
-  bool di_atas = true;
-  while ((ptr = peleksim(ptr, &leksim)) && leksim.tipe != TIPE_LEKSIM_AKHIR) {
-    if (leksim.tipe == TIPE_LEKSIM_KOMENTAR)
-      continue;
-
-    if (leksim.tipe == TIPE_LEKSIM_TIPE_DATA_MUAT && di_atas) {
-      Leksim lanjut;
-      const char *ptr_lanjut = ptr;
-      while ((ptr_lanjut = peleksim(ptr_lanjut, &lanjut)) &&
-             lanjut.tipe != TIPE_LEKSIM_AKHIR) {
-        if (lanjut.tipe == TIPE_LEKSIM_KOMENTAR)
-          continue;
-        if (lanjut.tipe == TIPE_LEKSIM_PENGENAL)
-          continue;
-        if (lanjut.tipe == TIPE_LEKSIM_NILAI_UNTAIAN) {
-          int len = lanjut.panjang;
-          char quote = lanjut.teks[0];
-          if (len >= 2 && (quote == '\'' || quote == '"') &&
-              lanjut.teks[len - 1] == quote) {
-            int path_len = len - 2;
-            if (path_len > 0) {
-              char *nama = malloc(path_len + 1);
-              if (nama) {
-                strncpy(nama, lanjut.teks + 1, path_len);
-                nama[path_len] = '\0';
-                char *res = NULL;
-                cari_berkas(nama, &res, NULL);
-                free(nama);
-                if (res && !berkas_sudah_dimuat(res)) {
-                  tandai_berkas_dimuat(res);
-                  const char *sub = baca_berkas(res);
-                  if (sub) {
-                    kumpul_leksim(sub, res, false);
-                    bersihkan_berkas(sub);
-                  }
-                }
-                free(res);
-              }
-            }
-          }
-          continue;
-        }
-        break;
-      }
-      ptr = ptr_lanjut;
-      continue;
-    }
-
-    di_atas = false;
-  }
-
-  if (!daftar_info) {
-    daftar_info = ib;
-  } else {
-    InfoBer *cur = daftar_info;
-    while (cur->lanjut)
-      cur = cur->lanjut;
-    cur->lanjut = ib;
-  }
-}
-
-static void cetak_leksim_terkumpul(void) {
-  int nomor = 0;
-  InfoBer *cur = daftar_info;
-  while (cur) {
-    nomor++;
-    if (nomor > 1)
-      printf("\n");
-    printf("Berkas %d: %s%s\n", nomor, cur->jalur,
-           cur->titik_masuk ? " (titik masuk)" : "");
-
-    int max_len = 0;
-    const char *ptr = cur->isi;
-    Leksim leksim;
-    while ((ptr = peleksim(ptr, &leksim)) && leksim.tipe != TIPE_LEKSIM_AKHIR) {
-      if (leksim.panjang > max_len)
-        max_len = leksim.panjang;
-    }
-    if (max_len < 22)
-      max_len = 22;
-
-    ptr = cur->isi;
-    while ((ptr = peleksim(ptr, &leksim)) && leksim.tipe != TIPE_LEKSIM_AKHIR) {
-      printf("%*.*s | %s\n", max_len, leksim.panjang, leksim.teks,
-             nama_leksim(leksim.tipe));
-    }
-    printf("%*s | %s\n", max_len, "", nama_leksim(TIPE_LEKSIM_AKHIR));
-
-    InfoBer *next = cur->lanjut;
-    free(cur->isi);
-    free(cur->jalur);
-    free(cur);
-    cur = next;
-  }
-
-  daftar_info = NULL;
-}
-
 int main(int argc, char **argv) {
   Arg arg = urai_arg(argc, argv);
 
@@ -189,9 +58,50 @@ int main(int argc, char **argv) {
                                    arg.jumlah_berkas_masuk);
   }
 
+  if (arg.leks) {
+    if (arg.jumlah_berkas_masuk == 0) {
+      printf("Argumen tidak valid.\n");
+      cetak_info();
+      return 1;
+    }
+    printf("Leksim:\n");
+    for (int i = 0; i < arg.jumlah_berkas_masuk; i++) {
+      if (i > 0)
+        printf("\n");
+      printf("Berkas %d: %s%s\n", i + 1, arg.daftar_berkas_masuk[i],
+             i == 0 ? " (titik masuk)" : "");
+
+      const char *isi = baca_berkas(arg.daftar_berkas_masuk[i]);
+      if (!isi) {
+        printf("Gagal baca: %s\n", arg.daftar_berkas_masuk[i]);
+        return 1;
+      }
+
+      int max_len = 0;
+      const char *ptr = isi;
+      Leksim leksim;
+      while ((ptr = peleksim(ptr, &leksim)) && leksim.tipe != TIPE_LEKSIM_AKHIR) {
+        if (leksim.panjang > max_len)
+          max_len = leksim.panjang;
+      }
+      if (max_len < 22)
+        max_len = 22;
+
+      ptr = isi;
+      while ((ptr = peleksim(ptr, &leksim)) && leksim.tipe != TIPE_LEKSIM_AKHIR) {
+        printf("%*.*s | %s\n", max_len, leksim.panjang, leksim.teks,
+               nama_leksim(leksim.tipe));
+      }
+      printf("%*s | %s\n", max_len, "", nama_leksim(TIPE_LEKSIM_AKHIR));
+
+      bersihkan_berkas(isi);
+    }
+    return 0;
+  }
+
   const char *berkas_masuk = arg.jumlah_berkas_masuk > 0 ? arg.daftar_berkas_masuk[0] : NULL;
   if (berkas_masuk) {
-    if (!arg.leks && !arg.urai && !arg.smtk && !arg.ra && !arg.opt && !arg.llvm) {
+    if (!arg.urai && !arg.smtk && !arg.ra && !arg.opt && !arg.llvm) {
       printf("Argumen tidak valid.\n");
       cetak_info();
       return 1;
@@ -209,16 +119,6 @@ int main(int argc, char **argv) {
       return 1;
     }
 
-    // Leksim
-    if (arg.leks) {
-      printf("Leksim:\n");
-      bersihkan_daftar_dimuat();
-      tandai_berkas_dimuat(berkas_masuk);
-      kumpul_leksim(isi_berkas, berkas_masuk, true);
-      cetak_leksim_terkumpul();
-    }
-
-    // PSA (Urai)
     if (arg.urai || arg.smtk || arg.ra || arg.opt || arg.llvm) {
       if (arg.urai) {
         printf("PSA:\n");
@@ -266,7 +166,6 @@ int main(int argc, char **argv) {
           }
         }
 
-        // llvm backend
         if (arg.llvm) {
           if (!arg.target) {
             printf("Perintah llvm memerlukan <target>\n");

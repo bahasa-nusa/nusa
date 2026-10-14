@@ -125,3 +125,17 @@ target_include_directories(
     "include"
 )
 
+# Uji peleksim
+add_executable(
+    nusa_uji_peleksim
+    src/uji/uji_peleksim.c
+    src/nusa/peleksim.c
+)
+
+target_include_directories(
+    nusa_uji_peleksim
+    PRIVATE
+    "include"
+)
+
+
