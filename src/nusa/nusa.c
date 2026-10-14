@@ -180,31 +180,32 @@ int main(int argc, char **argv) {
   }
 
   if (arg.llvm_ar) {
-    if (!arg.berkas_keluar || arg.jumlah_berkas_ar == 0) {
+    if (!arg.berkas_keluar || arg.jumlah_berkas_masuk == 0) {
       fprintf(stderr, "Penggunaan: nusa llvm ar <berkas-keluar> <nama-berkas>*\n");
       return 1;
     }
     return bagkang_llvm_buat_arsip(arg.berkas_keluar,
-                                   arg.daftar_berkas_ar,
-                                   arg.jumlah_berkas_ar);
+                                   arg.daftar_berkas_masuk,
+                                   arg.jumlah_berkas_masuk);
   }
 
-  if (arg.berkas_masuk) {
+  const char *berkas_masuk = arg.jumlah_berkas_masuk > 0 ? arg.daftar_berkas_masuk[0] : NULL;
+  if (berkas_masuk) {
     if (!arg.leks && !arg.urai && !arg.smtk && !arg.ra && !arg.opt && !arg.llvm) {
       printf("Argumen tidak valid.\n");
       cetak_info();
       return 1;
     }
 
-    direktori_berkas_utama = direktori_dari(arg.berkas_masuk);
+    direktori_berkas_utama = direktori_dari(berkas_masuk);
 
     char *biner = jalur_biner();
     direktori_instalasi = direktori_dari(biner ? biner : argv[0]);
     free(biner);
 
-    const char *isi_berkas = baca_berkas(arg.berkas_masuk);
+    const char *isi_berkas = baca_berkas(berkas_masuk);
     if (!isi_berkas) {
-      printf("Gagal baca: %s\n", arg.berkas_masuk);
+      printf("Gagal baca: %s\n", berkas_masuk);
       return 1;
     }
 
@@ -212,8 +213,8 @@ int main(int argc, char **argv) {
     if (arg.leks) {
       printf("Leksim:\n");
       bersihkan_daftar_dimuat();
-      tandai_berkas_dimuat(arg.berkas_masuk);
-      kumpul_leksim(isi_berkas, arg.berkas_masuk, true);
+      tandai_berkas_dimuat(berkas_masuk);
+      kumpul_leksim(isi_berkas, berkas_masuk, true);
       cetak_leksim_terkumpul();
     }
 
@@ -223,9 +224,9 @@ int main(int argc, char **argv) {
         printf("PSA:\n");
       }
       bersihkan_daftar_dimuat();
-      tandai_berkas_dimuat(arg.berkas_masuk);
+      tandai_berkas_dimuat(berkas_masuk);
 
-      PSA *psa = urai(isi_berkas, arg.berkas_masuk);
+      PSA *psa = urai(isi_berkas, berkas_masuk);
       if (psa) {
         if (arg.urai) {
           cetak_psa(psa, 0);
@@ -298,7 +299,7 @@ int main(int argc, char **argv) {
             .bentuk = arg.bentuk,
             .mode = arg.mode,
             .berkas_keluar = arg.berkas_keluar,
-            .berkas_masuk = arg.berkas_masuk
+            .berkas_masuk = berkas_masuk
           };
 
           int hasil = jembat_jalankan("llvm", ra_opt_imp, &opsi);

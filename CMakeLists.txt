@@ -111,3 +111,17 @@ target_include_directories(
     PRIVATE
     "include"
 )
+
+# Uji urai_arg
+add_executable(
+    nusa_uji_urai_arg
+    src/uji/uji_urai_arg.c
+    src/nusa/urai_arg.c
+)
+
+target_include_directories(
+    nusa_uji_urai_arg
+    PRIVATE
+    "include"
+)
+
