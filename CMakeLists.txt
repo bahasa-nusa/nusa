@@ -153,5 +153,21 @@ target_include_directories(
     "include"
 )
 
+# Uji pesemantik
+add_executable(
+    nusa_uji_pesemantik
+    src/uji/uji_pesemantik.c
+    src/nusa/pesemantik.c
+    src/nusa/pengurai.c
+    src/nusa/peleksim.c
+    src/nusa/berkas.c
+)
+
+target_include_directories(
+    nusa_uji_pesemantik
+    PRIVATE
+    "include"
+)
+
 
 

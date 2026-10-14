@@ -48,10 +48,6 @@ static char *modul_dari_jalur(const char *jalur) {
   const char *mulai = jalur;
   if (strncmp(mulai, "./", 2) == 0 || strncmp(mulai, ".\\", 2) == 0)
     mulai += 2;
-  if (strncmp(mulai, "kode/", 5) == 0 || strncmp(mulai, "kode\\", 5) == 0)
-    mulai += 5;
-  else if (strncmp(mulai, "contoh/", 7) == 0 || strncmp(mulai, "contoh\\", 7) == 0)
-    mulai += 7;
 
   size_t pjg = strlen(mulai);
   if (pjg >= 3 && strcmp(mulai + pjg - 3, ".ns") == 0)
@@ -287,7 +283,30 @@ static PSA *urai_satu_berkas(const char *isi, const char *jalur, bool titik_masu
       PSA *node_mod = buat_node(PSA_MOD, leksim.teks, leksim.panjang);
       node_mod->modul = salin(modul->modul);
 
+      bool satu_baris = false;
+      bool modul_pertama = true;
+
       while (true) {
+        Leksim t_cek;
+        leksim_berikut(ptr, &t_cek);
+        if (t_cek.tipe != TIPE_LEKSIM_PENGENAL)
+          break;
+
+        bool ada_baris_baru = false;
+        for (const char *c = ptr; c < t_cek.teks; c++) {
+          if (*c == '\n') {
+            ada_baris_baru = true;
+            break;
+          }
+        }
+
+        if (modul_pertama) {
+          satu_baris = !ada_baris_baru;
+          modul_pertama = false;
+        } else if (satu_baris && ada_baris_baru) {
+          break;
+        }
+
         char *nama_mod = urai_pengenal_modul(&ptr);
         if (!nama_mod)
           break;
@@ -389,6 +408,16 @@ static PSA *urai_satu_berkas(const char *isi, const char *jalur, bool titik_masu
         bool adalah_deklarasi = false;
         if (lanjut2.tipe == TIPE_LEKSIM_PENGENAL) {
           adalah_deklarasi = deklarasi_menunggu(ptr_lanjut2);
+        } else if (lanjut2.tipe == TIPE_LEKSIM_KURUNG_BULAT_TUTUP) {
+          Leksim setelah_tutup;
+          peleksim(ptr_lanjut2, &setelah_tutup);
+          if (setelah_tutup.tipe == TIPE_LEKSIM_KURUNG_KURAWAT_BUKA ||
+              setelah_tutup.tipe == TIPE_LEKSIM_KATA_KUNCI_PUBLIK ||
+              setelah_tutup.tipe == TIPE_LEKSIM_KATA_KUNCI_EKSTERNAL ||
+              setelah_tutup.tipe == TIPE_LEKSIM_TIPE_DATA_BILANGAN ||
+              setelah_tutup.tipe == TIPE_LEKSIM_TIPE_DATA_UNTAIAN) {
+            adalah_deklarasi = true;
+          }
         }
 
         if (adalah_deklarasi) {
